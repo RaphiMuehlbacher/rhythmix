@@ -25,13 +25,30 @@ jobs:
       # Build frontend 
       - name: Build Vite app
         run: npm run build
+        
+      # Install cloudflared
+      - name: Install cloudflared
+        run: |
+          curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-archive-keyring.gpg >/dev/null
+          echo "deb [signed-by=/usr/share/keyrings/cloudflare-archive-keyring.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+          sudo apt update
+          sudo apt install -y cloudflared
+          
 
-      # Copy dist/ to Raspberry Pi via SSH
+      # Configure SSH to use Cloudflare Access
+      - name: Setup SSH for Cloudflare Tunnel
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PI_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          # Add SSH config for Cloudflare access
+          echo "Host ${{ secrets.PI_HOST }}
+            ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --id ${{ secrets.CF_TOKEN_ID }} --secret ${{ secrets.CF_TOKEN_SECRET }}
+            IdentityFile ~/.ssh/id_ed25519" > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+      # Deploy files via rsync (through Cloudflare Tunnel)
       - name: Deploy to Raspberry Pi
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.PI_HOST }}
-          username: ${{ secrets.PI_USER }}
-          key: ${{ secrets.PI_SSH_KEY }}
-          source: "dist/*"
-          target: "/var/www/rhythmix"
+        run: |
+          rsync -az --delete dist/ ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/var/www/rhythmix
