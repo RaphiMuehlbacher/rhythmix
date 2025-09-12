@@ -11,43 +11,56 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: npm ci
 
-      # Deploy Convex backend 
       - name: Deploy Convex
         run: npx convex deploy
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
-      # Build frontend 
       - name: Build Vite app
         run: npm run build
-        
-      # Install cloudflared
+
       - name: Install cloudflared
         run: |
           curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-archive-keyring.gpg >/dev/null
           echo "deb [signed-by=/usr/share/keyrings/cloudflare-archive-keyring.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
           sudo apt update
           sudo apt install -y cloudflared
-          
+          cloudflared --version
 
-      # Configure SSH to use Cloudflare Access
       - name: Setup SSH for Cloudflare Tunnel
-        uses: shimataro/ssh-key-action@v2
-        with: 
-          key: ${{ secrets.PI_SSH_KEY }}
-          name: github_deploy
-          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
-          config: |
-            Host ${{ secrets.PI_SSH_HOST }}
-              ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h --id ${{ secrets.CF_TOKEN_ID }} --secret ${{ secrets.CF_TOKEN_SECRET }}
-              IdentityFile ~/.ssh/github_deploy
-      # Deploy files via rsync (through Cloudflare Tunnel)
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PI_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          # write SSH config safely
+          {
+            echo "Host r1"
+            echo "  HostName ${{ secrets.PI_HOST }}"
+            echo "  User ${{ secrets.PI_USER }}"
+            echo "  ProxyCommand $(which cloudflared) access ssh --hostname %h --id ${{ secrets.CF_TOKEN_ID }} --secret ${{ secrets.CF_TOKEN_SECRET }}"
+            echo "  IdentityFile ~/.ssh/id_ed25519"
+            echo "  StrictHostKeyChecking yes"
+          } > ~/.ssh/config
+
+          chmod 600 ~/.ssh/config
+
+      - name: Debug SSH connection
+        run: ssh -vvv r1 echo "SSH connection successful"
+
       - name: Deploy to Raspberry Pi
         run: |
-          rsync -az --delete dist/ ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/var/www/rhythmix
-
+          for i in 1 2 3; do
+            rsync -azvv --progress -e "ssh -F $HOME/.ssh/config" dist/ r1:/var/www/rhythmix
+            rsync_exit=$?
+            echo "rsync exit code: $rsync_exit"
+            [ $rsync_exit -eq 0 ] && break
+            sleep 5
+          done
