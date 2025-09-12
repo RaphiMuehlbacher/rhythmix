@@ -58,7 +58,7 @@ jobs:
       - name: Deploy to Raspberry Pi
         run: |
           for i in 1 2 3; do
-            rsync -azvv --progress -e "ssh -F $HOME/.ssh/config" dist/ r1:"sudo rsync --server -vvlogDtprze.iLsfxCIvu . /var/www/rhythmix"
+            rsync -azvv --progress -e "ssh -F $HOME/.ssh/config" --rsync-path="sudo rsync" dist/ r1:/var/www/rhythmix
             rsync_exit=$?
             echo "rsync exit code: $rsync_exit"
             [ $rsync_exit -eq 0 ] && break
