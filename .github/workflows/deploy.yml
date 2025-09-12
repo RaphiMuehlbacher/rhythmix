@@ -9,6 +9,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    env:
+      VITE_CONVEX_URL: ${{ secrets.PROD_CONVEX_URL }}
+      VITE_AUDIO_URL: ${{ secrets.PROD_AUDIO_URL }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
