@@ -51,4 +51,4 @@ jobs:
       # Deploy files via rsync (through Cloudflare Tunnel)
       - name: Deploy to Raspberry Pi
         run: |
-          rsync -az --delete dist/ ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/var/www/rhythmix
+          rsync -az --delete -e "ssh -F ~/.ssh/config" dist/ ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/var/www/rhythmix
