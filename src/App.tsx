@@ -1,17 +1,15 @@
-import Main from "@/components/main";
-import Player from "@/components/player.tsx";
-import Sidebar from "@/components/sidebar.tsx";
-import {PlayerProvider} from "@/context/player-context.tsx";
+import {Route, Routes} from "react-router";
+import Home from "@/pages/home.tsx";
+import Login from "@/pages/login.tsx";
+import SignUp from "@/pages/sign-up.tsx";
 
 export default function App() {
 	return (
-			<PlayerProvider>
-				<div className="w-full h-screen bg-black grid grid-rows-[12fr_1fr] grid-cols-[min-content_1fr] p-2 gap-x-2">
-					<Sidebar/>
-					<Main/>
-					<Player/>
-				</div>
-			</PlayerProvider>
+			<Routes>
+				<Route path="/" element={<Home/>}/>
+				<Route path="/login" element={<Login/>}/>
+				<Route path="/sign-up" element={<SignUp/>}/>
+			</Routes>
 	)
 }
 
