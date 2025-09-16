@@ -1,3 +1,12 @@
+import {useAuthActions} from "@convex-dev/auth/react";
+
 export default function Sidebar() {
-	return <h1 className="bg-primary rounded-lg w-sm">Sidebar</h1>
+	const {signOut} = useAuthActions();
+
+	return (
+			<div className="bg-primary rounded-lg w-sm">
+				<div>Sidebar</div>
+				<button onClick={signOut}>Sign Out</button>
+			</div>
+	);
 }

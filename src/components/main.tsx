@@ -8,7 +8,6 @@ export default function Main() {
 		return <h1>Error</h1>
 	}
 
-
 	return <div className="bg-primary rounded-lg">
 		<div
 				className={
