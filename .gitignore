@@ -13,6 +13,7 @@ dist-ssr
 *.local
 convex/_generated
 raspi_backend/.venv
+raspi_backend/__pycache__
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
