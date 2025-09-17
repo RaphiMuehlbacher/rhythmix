@@ -7,8 +7,12 @@ app = FastAPI()
 
 # Directories
 # SONGS_DIR = Path("/var/www/html/rhythmix/")  # HLS output folder final
-SONGS_DIR = Path("/home/raspi1/rhythmix/audio_files")  # HLS output folder
-UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
+#SONGS_DIR = Path("/home/raspi1/rhythmix/audio_files")  # HLS output folder
+#UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
+
+SONGS_DIR = Path("/audio_files")  # HLS output folder
+UPLOAD_DIR = Path("/audio_files_tmp")  # temporary upload folder
+
 
 # Allowed audio file types
 ALLOWED_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
@@ -40,7 +44,7 @@ async def upload_audio(
 
     # Build FFmpeg command with sudo
     ffmpeg_cmd = [
-        "sudo", "ffmpeg",
+         "ffmpeg",
         "-i", str(tmp_file_path),
         "-vn",
         "-ar", "44100",
