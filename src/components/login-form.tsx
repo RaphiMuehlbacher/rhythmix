@@ -1,6 +1,6 @@
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
-import {Link} from "react-router"
+import {Link, Navigate} from "react-router"
 import {z} from "zod"
 import {
 	Form,
@@ -13,28 +13,33 @@ import {
 import {zodResolver} from "@hookform/resolvers/zod"
 import {useForm} from "react-hook-form"
 import {useAuthActions} from "@convex-dev/auth/react"
+import {useConvexAuth} from "convex/react";
 
 const formSchema = z.object({
-	username: z.string().min(1, {message: "Username is required"}),
 	email: z.email(),
 	password: z
 			.string()
-			.min(5, {message: "Minimum 5 characters"})
+			.min(8, {message: "Minimum 8 characters"})
 			.refine((val) => !val.includes(" "), {message: "Spaces are not allowed"}),
 })
 
 export function LoginForm() {
 	const {signIn} = useAuthActions()
+	const {isAuthenticated} = useConvexAuth();
+
+
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			username: "",
 			email: "",
 			password: "",
 		},
 	})
 
-	const onSubmit = () => {
+	if (isAuthenticated) return <Navigate to="/" replace/>
+
+	const onSubmit = async (data: z.infer<typeof formSchema>) => {
+		await signIn("password", {flow: "signIn", email: data.email, password: data.password})
 	}
 
 	const signInGoogle = async () => {
@@ -47,25 +52,6 @@ export function LoginForm() {
 					<div className="flex flex-col gap-6">
 						<FormField
 								control={form.control}
-								name="username"
-								render={({field}) => (
-										<FormItem className="grid gap-2">
-											<FormLabel htmlFor="username">Username</FormLabel>
-											<FormControl>
-												<Input
-														id="username"
-														type="text"
-														placeholder=""
-														{...field}
-												/>
-											</FormControl>
-											<FormMessage className="text-xs text-red-500"/>
-										</FormItem>
-								)}
-						/>
-
-						<FormField
-								control={form.control}
 								name="email"
 								render={({field}) => (
 										<FormItem className="grid gap-2">
@@ -75,6 +61,7 @@ export function LoginForm() {
 														id="email"
 														type="email"
 														placeholder=""
+														className="border-neutral-700"
 														{...field}
 												/>
 											</FormControl>
@@ -101,6 +88,7 @@ export function LoginForm() {
 												<Input
 														id="password"
 														type="password"
+														className="border-neutral-700"
 														placeholder=""
 														{...field}
 												/>
@@ -113,7 +101,7 @@ export function LoginForm() {
 						<div className="flex flex-col gap-3">
 							<Button
 									type="submit"
-									className="w-full rounded-xl py-5 text-base font-semibold shadow-sm bg-zinc-900"
+									className="w-full rounded-xl py-5 text-base border-neutral-700 font-semibold shadow-sm bg-zinc-900"
 									variant="outline"
 							>
 								Login
@@ -121,7 +109,7 @@ export function LoginForm() {
 							<Button
 									type="button"
 									variant="outline"
-									className="w-full flex items-center justify-center gap-2 rounded-xl py-5 text-base font-semibold bg-zinc-900"
+									className="w-full flex items-center border-neutral-700 justify-center gap-2 rounded-xl py-5 text-base font-semibold bg-zinc-900"
 									onClick={signInGoogle}
 							>
 								<svg className="size-5" viewBox="-3 0 262 262" xmlns="http://www.w3.org/2000/svg"

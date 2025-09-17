@@ -1,6 +1,6 @@
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
-import {Link} from "react-router"
+import {Link, Navigate} from "react-router"
 import {z} from "zod"
 import {
 	Form,
@@ -13,13 +13,14 @@ import {
 import {zodResolver} from "@hookform/resolvers/zod"
 import {useForm} from "react-hook-form"
 import {useAuthActions} from "@convex-dev/auth/react"
+import {useConvexAuth} from "convex/react";
 
 const formSchema = z.object({
 	username: z.string().min(1, {error: "Username is required"}),
 	email: z.email(),
 	password: z
 			.string()
-			.min(5, {error: "Minimum 5 characters"})
+			.min(8, {error: "Minimum 8 characters"})
 			.refine((val) => !val.includes(" "), {error: "Spaces are not allowed"}),
 	confirmPassword: z
 			.string()
@@ -31,16 +32,22 @@ const formSchema = z.object({
 
 export function SignUpForm() {
 	const {signIn} = useAuthActions()
+	const {isAuthenticated} = useConvexAuth();
+
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			username: "",
 			email: "",
 			password: "",
+			confirmPassword: "",
 		},
 	})
 
-	const onSubmit = () => {
+	if (isAuthenticated) return <Navigate to="/" replace/>
+
+	const onSubmit = async (data: z.infer<typeof formSchema>) => {
+		await signIn("password", {flow: "signUp", email: data.email, password: data.password, name: data.username});
 	}
 
 	const signInGoogle = async () => {
@@ -62,6 +69,7 @@ export function SignUpForm() {
 														id="username"
 														type="text"
 														placeholder=""
+														className="border-neutral-700"
 														{...field}
 												/>
 											</FormControl>
@@ -81,6 +89,7 @@ export function SignUpForm() {
 														id="email"
 														type="email"
 														placeholder=""
+														className="border-neutral-700"
 														{...field}
 												/>
 											</FormControl>
@@ -108,6 +117,7 @@ export function SignUpForm() {
 														id="password"
 														type="password"
 														placeholder=""
+														className="border-neutral-700"
 														{...field}
 												/>
 											</FormControl>
@@ -127,6 +137,7 @@ export function SignUpForm() {
 														id="confirmPassword"
 														type="password"
 														placeholder=""
+														className="border-neutral-700"
 														{...field}
 												/>
 											</FormControl>
@@ -137,7 +148,7 @@ export function SignUpForm() {
 						<div className="flex flex-col gap-3">
 							<Button
 									type="submit"
-									className="w-full rounded-xl py-5 text-base font-semibold shadow-sm bg-zinc-900"
+									className="w-full rounded-xl py-5 border-neutral-700 text-base font-semibold shadow-sm bg-zinc-900"
 									variant="outline"
 							>
 								Sign Up
@@ -145,7 +156,7 @@ export function SignUpForm() {
 							<Button
 									type="button"
 									variant="outline"
-									className="w-full flex items-center justify-center gap-2 rounded-xl py-5 text-base font-semibold bg-zinc-900"
+									className="w-full flex items-center border-neutral-700 justify-center gap-2 rounded-xl py-5 text-base font-semibold bg-zinc-900"
 									onClick={signInGoogle}
 							>
 								<svg className="size-5" viewBox="-3 0 262 262" xmlns="http://www.w3.org/2000/svg"

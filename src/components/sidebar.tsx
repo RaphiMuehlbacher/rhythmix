@@ -6,7 +6,7 @@ export default function Sidebar() {
 	return (
 			<div className="bg-primary rounded-lg w-sm">
 				<div>Sidebar</div>
-				<button onClick={signOut}>Sign Out</button>
+				<button onClick={() => void signOut()}>Sign Out</button>
 			</div>
 	);
 }
