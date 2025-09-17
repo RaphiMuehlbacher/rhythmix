@@ -4,7 +4,6 @@ import {api} from "../../convex/_generated/api";
 
 export default function Main() {
 	const songs = useQuery(api.songs.get);
-
 	if (songs == undefined) {
 		return <h1>Error</h1>
 	}
