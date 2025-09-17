@@ -7,8 +7,8 @@ export default function SignUp() {
 				<div className="w-full max-w-sm">
 					<Card className="bg-[#1E2122] text-white border-[#303537]">
 						<CardHeader>
-							<CardTitle className="text-xl text-center">Sign into your account</CardTitle>
-							<CardDescription className="text-center text-neutral-500">
+							<CardTitle className="text-xl text-center">Sign up for your account</CardTitle>
+							<CardDescription className="text-center text-neutral-500e">
 								Enter your credentials
 							</CardDescription>
 						</CardHeader>
@@ -16,7 +16,6 @@ export default function SignUp() {
 					</Card>
 				</div>
 			</div>
-
 	)
 }
 
