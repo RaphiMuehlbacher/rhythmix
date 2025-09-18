@@ -9,9 +9,13 @@ import Hls from "hls.js";
 
 type PlayerContextType = {
 	isPlaying: boolean;
+	progress: number,
+	duration: number,
 	playTrack: (url: string) => void;
 	pause: () => void;
 	resume: () => void;
+	togglePlay: () => void;
+	seek: (ms: number) => void;
 };
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -21,6 +25,7 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 	const hlsRef = useRef<Hls | null>(null);
 
 	const [isPlaying, setIsPlaying] = useState(false);
+	const [progress, setProgress] = useState(0);
 
 	useEffect(() => {
 		hlsRef.current = new Hls({
@@ -29,9 +34,16 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 		});
 		hlsRef.current.attachMedia(audioRef.current);
 
+		const handleTimeUpdate = () => {
+			setProgress(audioRef.current.currentTime * 1000);
+		}
+
+		audioRef.current.addEventListener("timeupdate", handleTimeUpdate);
+
 		return () => {
 			hlsRef.current?.destroy();
 			audioRef.current.pause();
+			audioRef.current.removeEventListener("timeupdate", handleTimeUpdate);
 		};
 	}, []);
 
@@ -53,9 +65,31 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 		setIsPlaying(true);
 	}
 
+	const togglePlay = () => {
+		if (isPlaying) {
+			pause();
+		} else {
+			resume();
+		}
+	}
+
+	const seek = (ms: number) => {
+		audioRef.current.currentTime = ms / 1000;
+		setProgress(ms);
+	}
+
 	return (
 			<PlayerContext.Provider
-					value={{isPlaying, playTrack, pause, resume}}
+					value={{
+						isPlaying,
+						playTrack,
+						pause,
+						resume,
+						togglePlay,
+						progress: progress,
+						duration: audioRef.current.duration * 1000,
+						seek,
+					}}
 			>
 				{children}
 			</PlayerContext.Provider>

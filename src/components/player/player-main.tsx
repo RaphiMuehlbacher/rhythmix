@@ -1,8 +1,9 @@
 import PlayerBar from "@/components/player/player-bar.tsx";
+import {usePlayer} from "@/context/player-context.tsx";
 
 export default function PlayerMain() {
+	const {isPlaying, togglePlay} = usePlayer();
 	const shuffle = false;
-	const isPlaying = false;
 	const repeatMode = 0;
 
 	return (
@@ -47,6 +48,7 @@ export default function PlayerMain() {
 					</button>
 
 					<button
+							onClick={togglePlay}
 							className="rounded-full bg-white p-2"
 					>
 						{isPlaying ? (

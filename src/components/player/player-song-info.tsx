@@ -4,7 +4,7 @@ export default function PlayerSongInfo() {
 	const artist = "Pashanim";
 
 	return (
-			<div className="flex items-center justify-start gap-3 ml-1">
+			<div className="flex items-center justify-start gap-3">
 				<img className="size-15 rounded" src={imageUrl}
 						 alt={title}/>
 				<div>
