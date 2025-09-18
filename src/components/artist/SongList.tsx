@@ -11,7 +11,7 @@ export default function SongsList({ artistId }: { artistId: Id<"artist"> }) {
   const songs = useQuery(api.songs.byArtist, { artistId })
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-neutral-900 border-neutral-800">
       <CardHeader>
         <CardTitle className="text-white">Your Songs</CardTitle>
         <p className="text-gray-400">Manage your uploaded tracks</p>
@@ -25,7 +25,7 @@ export default function SongsList({ artistId }: { artistId: Id<"artist"> }) {
             {songs.map((song) => (
               <div
                 key={song._id}
-                className="flex items-center gap-4 p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors group"
+                className="flex items-center gap-4 p-3 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 transition-colors group"
               >
                 <img
                   src={song.image || "/placeholder.svg"}

@@ -43,7 +43,7 @@ export default function SongForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-gray-300">Song Name</FormLabel>
-              <Input {...field} className="bg-gray-700 border-gray-600 text-white" />
+              <Input {...field} className="bg-neutral-800 border-neutral-700 text-white" />
               <FormMessage />
             </FormItem>
           )}
@@ -54,7 +54,7 @@ export default function SongForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-gray-300">Lyrics</FormLabel>
-              <Textarea {...field} className="bg-gray-700 border-gray-600 text-white min-h-[120px]" />
+              <Textarea {...field} className="bg-neutral-800 border-neutral-700 text-white h-28 overflow-y-auto resize-none" />
               <FormMessage />
             </FormItem>
           )}
@@ -76,7 +76,7 @@ export default function SongForm() {
           onFileSelect={setAudioFile}
         />
 
-        <Button type="submit" className="w-full bg-gray-600 hover:bg-gray-500 text-white">
+        <Button type="submit" className="w-full bg-neutral-700 hover:bg-neutral-500 text-white">
           Upload Song
         </Button>
       </form>

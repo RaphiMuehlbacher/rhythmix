@@ -6,7 +6,7 @@ import SongForm from "@/components/artist/SongForm"
 
 export default function SongUploadCard() {
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-neutral-900 border-neutral-800">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
           <Music className="w-5 h-5" />

@@ -3,10 +3,11 @@
 import ProfileCard from "@/components/artist/ProfileCard"
 import SongUploadCard from "@/components/artist/SongUploadCard"
 import SongsList from "@/components/artist/SongList.tsx";
+import type {Id} from "../../convex/_generated/dataModel";
 
 export default function ArtistPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-neutral-950 text-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         <header>
           <h1 className="text-3xl font-bold">Artist Dashboard</h1>
@@ -18,7 +19,7 @@ export default function ArtistPage() {
           <SongUploadCard />
         </div>
 
-         <SongsList artistId={"j574dnpwv03zg4hmgfz662ahrn7qvgr5"} />
+         <SongsList artistId={"j574dnpwv03zg4hmgfz662ahrn7qvgr5" as Id<"artist">} />
       </div>
     </div>
   )
