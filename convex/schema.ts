@@ -8,6 +8,7 @@ export default defineSchema({
 		title: v.string(),
 		artist: v.id("artist"),
 		image: v.string(),
+		audioUrl: v.string(),
 	}),
 	artist: defineTable({
 		name: v.string()

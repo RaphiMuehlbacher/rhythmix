@@ -19,6 +19,7 @@ export default function Main() {
 							name={track.title}
 							artist={track.artist}
 							image={track.image}
+							audioUrl={track.audioUrl}
 							key={track._id}
 					/>
 			))}

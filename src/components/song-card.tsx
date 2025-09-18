@@ -1,10 +1,16 @@
 import {usePlayer} from "@/context/player-context.tsx";
 
-export default function SongCard({name, artist, image}: { name: string; artist: string; image: string }) {
+export default function SongCard({name, artist, image, audioUrl}: {
+	name: string;
+	artist: string;
+	image: string;
+	audioUrl: string
+}) {
+
 	const {playTrack} = usePlayer();
 
 	const handlePlay = () => {
-		playTrack(`${import.meta.env.VITE_AUDIO_URL}/just-dance/output.m3u8`);
+		playTrack(audioUrl);
 	}
 
 	return (
