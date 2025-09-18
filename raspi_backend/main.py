@@ -7,11 +7,11 @@ app = FastAPI()
 
 # Directories
 # SONGS_DIR = Path("/var/www/html/rhythmix/")  # HLS output folder final
-#SONGS_DIR = Path("/home/raspi1/rhythmix/audio_files")  # HLS output folder
-#UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
-
-SONGS_DIR = Path("/audio_files")  # HLS output folder
-UPLOAD_DIR = Path("/audio_files_tmp")  # temporary upload folder
+SONGS_DIR = Path("/home/raspi1/rhythmix/audio_files")  # HLS output folder
+UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
+#
+# SONGS_DIR = Path("/audio_files")  # HLS output folder
+# UPLOAD_DIR = Path("/audio_files_tmp")  # temporary upload folder
 
 
 # Allowed audio file types
