@@ -6,5 +6,6 @@ export const getArtist = query<{ id: string }>(async (ctx, {id: artistID}) => {
   return {
     name: artist.name ?? "Unknown Artist",
     description: artist.description ?? "",
+    profile_pic_url: artist.profile_pic_url ?? "",
   };
 });

@@ -1,8 +1,8 @@
 "use client"
 
 import ProfileCard from "@/components/artist/ProfileCard"
-// import SongUploadCard from "@/components/artist/SongUploadCard"
-// import SongsList from "@/components/artist/SongList.tsx";
+import SongUploadCard from "@/components/artist/SongUploadCard"
+import SongsList from "@/components/artist/SongList.tsx";
 
 export default function ArtistPage() {
   return (
@@ -14,11 +14,11 @@ export default function ArtistPage() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ProfileCard artistId={"j57cfk857tebwhpcxkrxr3qkpx7qtqrj"} />
-          {/*<SongUploadCard />*/}
+          <ProfileCard artistId={"j574dnpwv03zg4hmgfz662ahrn7qvgr5"} />
+          <SongUploadCard />
         </div>
 
-         {/*<SongsList />*/}
+         <SongsList artistId={"j574dnpwv03zg4hmgfz662ahrn7qvgr5"} />
       </div>
     </div>
   )

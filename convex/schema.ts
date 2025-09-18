@@ -12,5 +12,6 @@ export default defineSchema({
   artist: defineTable({
     name: v.string(),
     description: v.string(),
+    profile_pic_url: v.string(),
   }),
 });
