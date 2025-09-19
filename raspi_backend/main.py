@@ -9,30 +9,45 @@ app = FastAPI()
 # SONGS_DIR = Path("/var/www/html/rhythmix/")  # HLS output folder final
 SONGS_DIR = Path("/home/raspi1/rhythmix/audio_files")  # HLS output folder
 UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
+COVER_DIR = Path("/home/raspi1/rhythmix/song_cover")  # HLS output folder
 #
 # SONGS_DIR = Path("/audio_files")  # HLS output folder
 # UPLOAD_DIR = Path("/audio_files_tmp")  # temporary upload folder
 
 
 # Allowed audio file types
-ALLOWED_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
+ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
+ALLOWED_COVER_EXTENSIONS = {".png", ".jpg", ".webp"}
+
 
 # Ensure folders exist
 SONGS_DIR.mkdir(parents=True, exist_ok=True)
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+COVER_DIR.mkdir(parents=True, exist_ok=True)
 
 @app.post("/upload")
 async def upload_audio(
     song_id: str = Form(...),
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    cover: UploadFile = File(...)
 ):
     # Check file extension
-    ext = Path(file.filename).suffix.lower()
-    if ext not in ALLOWED_EXTENSIONS:
+    ext_audio = Path(file.filename).suffix.lower()
+    ext_cover = Path(cover.filename).suffix.lower()
+    if ext_audio not in ALLOWED_AUDIO_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"Only files with extensions {ALLOWED_EXTENSIONS} are allowed"
+            detail=f"Only files with extensions {ALLOWED_AUDIO_EXTENSIONS} are allowed"
         )
+    if ext_cover not in ALLOWED_COVER_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only files with extensions {ALLOWED_COVER_EXTENSIONS} are allowed"
+        )
+
+    cover_path = COVER_DIR / f"{song_id}{ext_cover}"
+    with open(cover_path, "wb") as buffer:
+        shutil.copyfileobj(cover.file, buffer)
 
     # Save uploaded file temporarily
     tmp_file_path = UPLOAD_DIR / f"{song_id}_{file.filename}"
