@@ -2,28 +2,23 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from pathlib import Path
 import shutil
 import subprocess
+import shutil as pyshutil
 
 app = FastAPI()
 
 # Directories
-# SONGS_DIR = Path("/var/www/html/rhythmix/")  # HLS output folder final
-SONGS_DIR = Path("/home/raspi1/rhythmix/audio_files")  # HLS output folder
+SONGS_DIR = Path("/home/raspi1/rhythmix/audio_files")       # HLS output base
 UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
-COVER_DIR = Path("/home/raspi1/rhythmix/song_cover")  # HLS output folder
-#
-# SONGS_DIR = Path("/audio_files")  # HLS output folder
-# UPLOAD_DIR = Path("/audio_files_tmp")  # temporary upload folder
+COVER_DIR = Path("/home/raspi1/rhythmix/covers")            # cover images
 
-
-# Allowed audio file types
+# Allowed file types
 ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
-ALLOWED_COVER_EXTENSIONS = {".png", ".jpg", ".webp"}
+ALLOWED_COVER_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
-
-# Ensure folders exist
-SONGS_DIR.mkdir(parents=True, exist_ok=True)
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-COVER_DIR.mkdir(parents=True, exist_ok=True)
+# Ensure base folders exist
+for d in (SONGS_DIR, UPLOAD_DIR, COVER_DIR):
+    d.mkdir(parents=True, exist_ok=True)
+print(f"created at {COVER_DIR}")
 
 @app.post("/upload")
 async def upload_audio(
@@ -31,35 +26,50 @@ async def upload_audio(
     file: UploadFile = File(...),
     cover: UploadFile = File(...)
 ):
-    # Check file extension
+    # Validate extensions
     ext_audio = Path(file.filename).suffix.lower()
     ext_cover = Path(cover.filename).suffix.lower()
     if ext_audio not in ALLOWED_AUDIO_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"Only files with extensions {ALLOWED_AUDIO_EXTENSIONS} are allowed"
+            detail=f"Only files with extensions {sorted(ALLOWED_AUDIO_EXTENSIONS)} are allowed"
         )
     if ext_cover not in ALLOWED_COVER_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"Only files with extensions {ALLOWED_COVER_EXTENSIONS} are allowed"
+            detail=f"Only files with extensions {sorted(ALLOWED_COVER_EXTENSIONS)} are allowed"
         )
 
+    # Save cover
     cover_path = COVER_DIR / f"{song_id}{ext_cover}"
     with open(cover_path, "wb") as buffer:
         shutil.copyfileobj(cover.file, buffer)
+    print(f"saved cover at: {cover_path}")
 
-    # Save uploaded file temporarily
+    # Save uploaded audio temporarily
     tmp_file_path = UPLOAD_DIR / f"{song_id}_{file.filename}"
     with open(tmp_file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # HLS output path
-    hls_output = SONGS_DIR / "output.m3u8"
+    # Prepare per-song output dir and paths
+    ID_SONG_DIR = SONGS_DIR / f"{song_id}"
+    ID_SONG_DIR.mkdir(parents=True, exist_ok=True)  # IMPORTANT: create the directory
+    hls_output = ID_SONG_DIR / "output.m3u8"
+    segment_pattern = ID_SONG_DIR / "segment_%03d.m4s"
 
-    # Build FFmpeg command with sudo
+    # Optionally verify ffmpeg is available
+    if pyshutil.which("ffmpeg") is None:
+        # Clean up tmp file before error
+        try:
+            tmp_file_path.unlink(missing_ok=True)
+        finally:
+            pass
+        raise HTTPException(status_code=500, detail="ffmpeg not found in PATH")
+
+    # FFmpeg command
     ffmpeg_cmd = [
-         "ffmpeg",
+        "ffmpeg",
+        "-y",                              # overwrite if exists
         "-i", str(tmp_file_path),
         "-vn",
         "-ar", "44100",
@@ -70,26 +80,32 @@ async def upload_audio(
         "-hls_time", "4",
         "-hls_segment_type", "fmp4",
         "-hls_playlist_type", "vod",
+        "-hls_flags", "independent_segments",
+        "-hls_segment_filename", str(segment_pattern),
         "-avoid_negative_ts", "make_zero",
-        str(hls_output)
+        str(hls_output),
     ]
 
-    # Run FFmpeg
     try:
         result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
         if result.returncode != 0:
+            # Log both streams to help debugging
             print("FFmpeg stdout:", result.stdout)
             print("FFmpeg stderr:", result.stderr)
-            raise HTTPException(status_code=500, detail="FFmpeg processing failed")
+            raise HTTPException(status_code=500, detail=f"FFmpeg processing failed: {result.stderr.strip()[:1000]}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"FFmpeg execution error: {e}")
-
-    # Delete temporary upload file
-    tmp_file_path.unlink()
+    finally:
+        # Always remove the temp file
+        try:
+            tmp_file_path.unlink(missing_ok=True)
+        except Exception:
+            pass
 
     return {
         "status": "success",
         "song_id": song_id,
         "filename": file.filename,
-        "message": f"File processed and HLS stored in '{SONGS_DIR}'"
+        "covername": cover.filename,
+        "message": f"File processed and HLS stored in '{ID_SONG_DIR}'"
     }
