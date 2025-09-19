@@ -1,47 +1,48 @@
 import React, {useEffect, useState} from "react";
+import {usePlayer} from "@/context/player-context.tsx";
 
 export default function VolumeBar() {
-	const [volume, setVolume] = useState(0.5);
+	const {volume, setVolume} = usePlayer();
 	const [lastVolume, setLastVolume] = useState(0);
-	const [isDragging, setIsDragging] = useState(false);
-
-	const updateVolume = (clientX: number) => {
-		const barElement = document.querySelector('.volume-bar');
-		if (!barElement) return;
-
-		const barRect = barElement.getBoundingClientRect();
-		const offsetX = clientX - barRect.left;
-		const newVolume = Math.min(Math.max(0, offsetX / barRect.width), 1);
-		setVolume(newVolume);
-	};
-
-	const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-		e.preventDefault();
-		setIsDragging(true);
-		updateVolume(e.clientX);
-	};
+	const [dragVolume, setDragVolume] = useState<number | null>(null);
+	const displayVolume = dragVolume ?? volume;
 
 	useEffect(() => {
+		if (dragVolume === null) return;
+
 		const handleMouseMove = (e: MouseEvent) => {
-			if (isDragging) {
-				updateVolume(e.clientX);
-			}
+			const newPosition = calculateNewVolume(e.clientX);
+			setDragVolume(newPosition);
+			setVolume(newPosition);
 		};
 
 		const handleMouseUp = () => {
-			setIsDragging(false);
+			setDragVolume(null);
 		};
 
-		document.addEventListener('mousemove', handleMouseMove as EventListener);
-		document.addEventListener('mouseup', handleMouseUp as EventListener);
+		document.addEventListener('mousemove', handleMouseMove);
+		document.addEventListener('mouseup', handleMouseUp);
 		return () => {
-			document.removeEventListener(
-					'mousemove',
-					handleMouseMove as EventListener,
-			);
-			document.removeEventListener('mouseup', handleMouseUp as EventListener);
+			document.removeEventListener('mousemove', handleMouseMove);
+			document.removeEventListener('mouseup', handleMouseUp);
 		};
-	}, [isDragging]);
+	}, [dragVolume]);
+
+	const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+		e.preventDefault();
+		const newVolume = calculateNewVolume(e.clientX);
+		setDragVolume(newVolume);
+		setVolume(newVolume);
+	};
+
+	const calculateNewVolume = (clientX: number): number => {
+		const barElement = document.querySelector('.volume-bar');
+		if (!barElement) return 0;
+
+		const barRect = barElement.getBoundingClientRect();
+		const offsetX = clientX - barRect.left;
+		return Math.round(Math.min(Math.max(0, (offsetX / barRect.width) * 100), 100));
+	};
 
 	const handleMuteClick = () => {
 		if (volume > 0) {
@@ -74,14 +75,15 @@ export default function VolumeBar() {
 						className="relative w-26 h-1 bg-zinc-600 rounded-lg group volume-bar"
 						onMouseDown={handleMouseDown}
 				>
+					<div className="absolute -top-2 -bottom-2 left-0 right-0"/>
 					<div
-							className={`absolute top-0 left-0 h-full rounded-lg ${isDragging ? 'bg-green-500' : 'bg-white group-hover:bg-green-500'}`}
-							style={{width: `${volume * 100}%`}}
+							className={`absolute top-0 left-0 h-full rounded-lg ${dragVolume !== null ? 'bg-green-500' : 'bg-white group-hover:bg-green-500'}`}
+							style={{width: `${displayVolume}%`}}
 					></div>
 					<div
-							className={`absolute top-[-4px] size-3 bg-white rounded-full cursor-pointer group-hover:block ${!isDragging && 'hidden'}`}
+							className={`absolute top-[-4px] size-3 bg-white rounded-full cursor-pointer group-hover:block ${dragVolume ?? 'hidden'}`}
 							style={{
-								left: `${volume * 100}%`,
+								left: `${displayVolume}%`,
 								transform: 'translateX(-50%)',
 							}}
 

@@ -4,7 +4,7 @@ import PlayerOptions from "@/components/player/player-options.tsx";
 
 export default function Player() {
 	return (
-			<div className="col-span-3 flex justify-between items-center px-1">
+			<div className="col-span-3 flex justify-between items-center px-1 py-2">
 				<PlayerSongInfo/>
 				<PlayerMain/>
 				<PlayerOptions/>

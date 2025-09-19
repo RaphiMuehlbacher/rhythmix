@@ -10,12 +10,14 @@ import Hls from "hls.js";
 type PlayerContextType = {
 	isPlaying: boolean;
 	progress: number,
+	seek: (ms: number) => void;
 	duration: number,
+	volume: number,
+	setVolume: (volume: number) => void;
 	playTrack: (url: string) => void;
 	pause: () => void;
 	resume: () => void;
 	togglePlay: () => void;
-	seek: (ms: number) => void;
 };
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -26,6 +28,7 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [progress, setProgress] = useState(0);
+	const [volume, setVolumeState] = useState(100);
 
 	useEffect(() => {
 		hlsRef.current = new Hls({
@@ -78,6 +81,11 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 		setProgress(ms);
 	}
 
+	const setVolume = (newVolume: number) => {
+		setVolumeState(newVolume);
+		audioRef.current.volume = newVolume / 100;
+	};
+
 	return (
 			<PlayerContext.Provider
 					value={{
@@ -88,6 +96,8 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 						togglePlay,
 						progress: progress,
 						duration: audioRef.current.duration * 1000,
+						volume,
+						setVolume,
 						seek,
 					}}
 			>
