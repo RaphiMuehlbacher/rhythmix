@@ -15,8 +15,8 @@ export default function PlayerMusicBar() {
 		};
 
 		const handleMouseUp = (e: MouseEvent) => {
-			const newPos = calculateNewPosition(e.clientX);
 			setDragPosition(null);
+			const newPos = calculateNewPosition(e.clientX);
 			seek(newPos);
 		};
 
@@ -69,8 +69,8 @@ export default function PlayerMusicBar() {
 							style={{width: `${progressPercent}%`}}
 					></div>
 					<div
-							className={`absolute top-[-4px] w-3 h-3 bg-white rounded-full cursor-pointer ${
-									dragPosition !== null ? '' : 'hidden group-hover:block'
+							className={`absolute top-[-4px] w-3 h-3 bg-white rounded-full cursor-pointer group-hover:block ${
+									dragPosition ?? 'hidden'
 							}`}
 							style={{
 								left: `${progressPercent}%`,
@@ -79,6 +79,7 @@ export default function PlayerMusicBar() {
 					></div>
 				</div>
 				<p className="text-zinc-400 text-[13px] relative top-[-2px]">
+					{msToMinutesAndSeconds(duration)}
 				</p>
 			</div>
 	);
