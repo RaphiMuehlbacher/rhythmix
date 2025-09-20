@@ -25,11 +25,11 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
-      - name: Type check (non-blocking)
+      - name: Type check 
         run: npx tsc --noEmit || true
       
       - name: Build Vite app
-        run: vite build
+        run: npm run build
         
       - name: Install cloudflared
         run: |
