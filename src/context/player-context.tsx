@@ -9,9 +9,15 @@ import Hls from "hls.js";
 
 type PlayerContextType = {
 	isPlaying: boolean;
+	progress: number,
+	seek: (ms: number) => void;
+	duration: number,
+	volume: number,
+	setVolume: (volume: number) => void;
 	playTrack: (url: string) => void;
 	pause: () => void;
 	resume: () => void;
+	togglePlay: () => void;
 };
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -21,6 +27,8 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 	const hlsRef = useRef<Hls | null>(null);
 
 	const [isPlaying, setIsPlaying] = useState(false);
+	const [progress, setProgress] = useState(0);
+	const [volume, setVolumeState] = useState(100);
 
 	useEffect(() => {
 		hlsRef.current = new Hls({
@@ -29,9 +37,16 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 		});
 		hlsRef.current.attachMedia(audioRef.current);
 
+		const handleTimeUpdate = () => {
+			setProgress(audioRef.current.currentTime * 1000);
+		}
+
+		audioRef.current.addEventListener("timeupdate", handleTimeUpdate);
+
 		return () => {
 			hlsRef.current?.destroy();
 			audioRef.current.pause();
+			audioRef.current.removeEventListener("timeupdate", handleTimeUpdate);
 		};
 	}, []);
 
@@ -53,9 +68,38 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 		setIsPlaying(true);
 	}
 
+	const togglePlay = () => {
+		if (isPlaying) {
+			pause();
+		} else {
+			resume();
+		}
+	}
+
+	const seek = (ms: number) => {
+		audioRef.current.currentTime = ms / 1000;
+		setProgress(ms);
+	}
+
+	const setVolume = (newVolume: number) => {
+		setVolumeState(newVolume);
+		audioRef.current.volume = newVolume / 100;
+	};
+
 	return (
 			<PlayerContext.Provider
-					value={{isPlaying, playTrack, pause, resume}}
+					value={{
+						isPlaying,
+						playTrack,
+						pause,
+						resume,
+						togglePlay,
+						progress: progress,
+						duration: (audioRef.current.duration * 1000) || 0,
+						volume,
+						setVolume,
+						seek,
+					}}
 			>
 				{children}
 			</PlayerContext.Provider>

@@ -2,11 +2,12 @@ import SongCard from "@/components/song-card.tsx";
 import {useQuery} from "convex/react";
 import {api} from "../../convex/_generated/api";
 
-export default function Main() {
+export default function MainContent() {
 	const songs = useQuery(api.songs.get);
 	if (songs == undefined) {
 		return <h1>Error</h1>
 	}
+
 
 	return <div className="bg-primary rounded-lg">
 		<div
@@ -16,7 +17,7 @@ export default function Main() {
 		>
 			{songs.slice(0, 10).map((track) => (
 					<SongCard
-							name={track.title}
+							title={track.title}
 							artist={track.artist}
 							image={track.image}
 							audioUrl={track.audioUrl}

@@ -1,12 +1,11 @@
 import {usePlayer} from "@/context/player-context.tsx";
 
-export default function SongCard({name, artist, image, audioUrl}: {
-	name: string;
+export default function SongCard({title, artist, image, audioUrl}: {
+	title: string;
 	artist: string;
 	image: string;
 	audioUrl: string
 }) {
-
 	const {playTrack} = usePlayer();
 
 	const handlePlay = () => {
@@ -16,7 +15,7 @@ export default function SongCard({name, artist, image, audioUrl}: {
 	return (
 			<div className="flex flex-col p-[9px] rounded-md cursor-pointer hover:bg-neutral-800 group">
 				<div className="relative">
-					<img width={300} height={300} className="rounded-lg w-full group" src={image} alt={name}/>
+					<img width={300} height={300} className="rounded-lg w-full group" src={image} alt={title}/>
 					<button
 							onClick={handlePlay}
 							className="hidden group-hover:flex items-center justify-center absolute bottom-2 right-2 rounded-full bg-green-500 size-12 p-2 transition-transform transform hover:scale-[1.03] duration-75"
@@ -27,8 +26,8 @@ export default function SongCard({name, artist, image, audioUrl}: {
 						</svg>
 					</button>
 				</div>
-				<p className="font-[490] text-white line-clamp-2 mt-2">{name}</p>
-				<p className="text-zinc-400 text-sm line-clamp-2">{artist}</p>
+				<p className="font-medium text-white line-clamp-2 mt-2">{title}</p>
+				<p className="font-medium text-zinc-400 text-sm line-clamp-2">{artist}</p>
 			</div>
 	);
 }
