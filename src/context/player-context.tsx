@@ -95,7 +95,7 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
 						resume,
 						togglePlay,
 						progress: progress,
-						duration: audioRef.current.duration * 1000,
+						duration: (audioRef.current.duration * 1000) || 0,
 						volume,
 						setVolume,
 						seek,

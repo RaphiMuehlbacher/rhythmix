@@ -70,7 +70,7 @@ export default function PlayerMusicBar() {
 					></div>
 					<div
 							className={`absolute top-[-4px] w-3 h-3 bg-white rounded-full cursor-pointer group-hover:block ${
-									dragPosition ?? 'hidden'
+									dragPosition !== null ? 'block' : 'hidden'
 							}`}
 							style={{
 								left: `${progressPercent}%`,

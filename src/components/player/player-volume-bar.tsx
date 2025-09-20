@@ -81,7 +81,7 @@ export default function VolumeBar() {
 							style={{width: `${displayVolume}%`}}
 					></div>
 					<div
-							className={`absolute top-[-4px] size-3 bg-white rounded-full cursor-pointer group-hover:block ${dragVolume ?? 'hidden'}`}
+							className={`absolute top-[-4px] size-3 bg-white rounded-full cursor-pointer group-hover:block ${dragVolume !== null ? 'block' : 'hidden'}`}
 							style={{
 								left: `${displayVolume}%`,
 								transform: 'translateX(-50%)',
