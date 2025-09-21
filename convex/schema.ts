@@ -7,7 +7,9 @@ export default defineSchema({
   songs: defineTable({
     title: v.string(),
     artist: v.id("artist"),
-    image: v.string(),
+    duration: v.float64(),
+    audioUrl: v.optional(v.string()),
+    image: v.optional(v.string()),
   }),
   artist: defineTable({
     name: v.string(),
