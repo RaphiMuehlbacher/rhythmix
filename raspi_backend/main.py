@@ -3,13 +3,14 @@ from pathlib import Path
 import shutil
 import subprocess
 import shutil as pyshutil
+from mutagen import File as MutagenFile
 
 app = FastAPI()
 
 # Directories
-SONGS_DIR = Path("/home/raspi1/rhythmix/audio_files")       # HLS output base
+SONGS_DIR = Path("/var/www/html/rhythmix/audio_files")       # HLS output base
 UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
-COVER_DIR = Path("/home/raspi1/rhythmix/covers")            # cover images
+COVER_DIR = Path("/var/www/html/rhythmix/covers")            # cover images
 
 # Allowed file types
 ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
@@ -18,13 +19,22 @@ ALLOWED_COVER_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 # Ensure base folders exist
 for d in (SONGS_DIR, UPLOAD_DIR, COVER_DIR):
     d.mkdir(parents=True, exist_ok=True)
-print(f"created at {COVER_DIR}")
+
+def get_audio_duration(path: Path) -> float:
+    """Return duration in seconds, or 0 if unreadable."""
+    try:
+        audio = MutagenFile(path)
+        if audio is None or not audio.info:
+            return 0.0
+        return audio.info.length
+    except Exception:
+        return 0.0
 
 @app.post("/upload")
 async def upload_audio(
     song_id: str = Form(...),
     file: UploadFile = File(...),
-    cover: UploadFile = File(...)
+    cover: UploadFile = File(...),
 ):
     # Validate extensions
     ext_audio = Path(file.filename).suffix.lower()
@@ -44,32 +54,29 @@ async def upload_audio(
     cover_path = COVER_DIR / f"{song_id}{ext_cover}"
     with open(cover_path, "wb") as buffer:
         shutil.copyfileobj(cover.file, buffer)
-    print(f"saved cover at: {cover_path}")
 
     # Save uploaded audio temporarily
     tmp_file_path = UPLOAD_DIR / f"{song_id}_{file.filename}"
     with open(tmp_file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
+    # ð¹ Extract duration BEFORE transcoding
+    duration_seconds = get_audio_duration(tmp_file_path)
+
     # Prepare per-song output dir and paths
     ID_SONG_DIR = SONGS_DIR / f"{song_id}"
-    ID_SONG_DIR.mkdir(parents=True, exist_ok=True)  # IMPORTANT: create the directory
+    ID_SONG_DIR.mkdir(parents=True, exist_ok=True)
     hls_output = ID_SONG_DIR / "output.m3u8"
     segment_pattern = ID_SONG_DIR / "segment_%03d.m4s"
 
-    # Optionally verify ffmpeg is available
+    # Verify ffmpeg is available
     if pyshutil.which("ffmpeg") is None:
-        # Clean up tmp file before error
-        try:
-            tmp_file_path.unlink(missing_ok=True)
-        finally:
-            pass
+        tmp_file_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail="ffmpeg not found in PATH")
 
     # FFmpeg command
     ffmpeg_cmd = [
-        "ffmpeg",
-        "-y",                              # overwrite if exists
+        "ffmpeg", "-y",
         "-i", str(tmp_file_path),
         "-vn",
         "-ar", "44100",
@@ -89,23 +96,18 @@ async def upload_audio(
     try:
         result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            # Log both streams to help debugging
             print("FFmpeg stdout:", result.stdout)
             print("FFmpeg stderr:", result.stderr)
             raise HTTPException(status_code=500, detail=f"FFmpeg processing failed: {result.stderr.strip()[:1000]}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"FFmpeg execution error: {e}")
     finally:
-        # Always remove the temp file
-        try:
-            tmp_file_path.unlink(missing_ok=True)
-        except Exception:
-            pass
+        tmp_file_path.unlink(missing_ok=True)
 
     return {
         "status": "success",
         "song_id": song_id,
-        "filename": file.filename,
-        "covername": cover.filename,
-        "message": f"File processed and HLS stored in '{ID_SONG_DIR}'"
+        "duration": round(duration_seconds, 2),
+        "filepath": str(ID_SONG_DIR / file.filename),
+        "coverpath": str(cover_path),
     }
