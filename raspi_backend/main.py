@@ -10,7 +10,7 @@ app = FastAPI()
 # Directories
 SONGS_DIR = Path("/var/www/html/rhythmix/audio_files")       # HLS output base
 UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
-COVER_DIR = Path("/var/www/html/rhythmix/covers")            # cover images
+COVER_DIR = Path("/var/www/html/rhythmix/covers")           # cover images
 
 # Allowed file types
 ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
@@ -20,15 +20,16 @@ ALLOWED_COVER_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 for d in (SONGS_DIR, UPLOAD_DIR, COVER_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
-def get_audio_duration(path: Path) -> float:
-    """Return duration in seconds, or 0 if unreadable."""
+
+def get_audio_duration(path: Path) -> int:
     try:
         audio = MutagenFile(path)
         if audio is None or not audio.info:
-            return 0.0
-        return audio.info.length
+            return 0
+        return int(audio.info.length * 1000)
     except Exception:
-        return 0.0
+        return 0
+
 
 @app.post("/upload")
 async def upload_audio(
@@ -60,8 +61,8 @@ async def upload_audio(
     with open(tmp_file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # ð¹ Extract duration BEFORE transcoding
-    duration_seconds = get_audio_duration(tmp_file_path)
+    # 🔹 Extract duration in ms BEFORE transcoding
+    duration_ms = get_audio_duration(tmp_file_path)
 
     # Prepare per-song output dir and paths
     ID_SONG_DIR = SONGS_DIR / f"{song_id}"
@@ -107,7 +108,7 @@ async def upload_audio(
     return {
         "status": "success",
         "song_id": song_id,
-        "duration": round(duration_seconds, 2),
-        "filepath": str(ID_SONG_DIR / file.filename),
+        "duration": duration_ms,
+        "filepath": str(hls_output),
         "coverpath": str(cover_path),
     }

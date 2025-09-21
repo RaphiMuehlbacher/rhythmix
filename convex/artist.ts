@@ -14,17 +14,19 @@ export const getArtist = query({
   },
 });
 
-// Minimal insert: only required fields (audio_url and image are optional in your schema)
+// Updated to include lyrics
 export const createSongMinimal = mutation({
   args: {
     title: v.string(),
     artist_id: v.id("artist"),
+    lyrics: v.optional(v.string()),
   },
-  handler: async (ctx, { title, artist_id }) => {
+  handler: async (ctx, { title, artist_id, lyrics }) => {
     const songId = await ctx.db.insert("songs", {
       title,
       artist: artist_id,
       duration: 0,
+      lyrics: lyrics || "", // Save lyrics
       // audio_url and image omitted (optional)
     });
     return songId;
@@ -51,6 +53,7 @@ export const uploadSong = action({
   args: {
     title: v.string(),
     artist_id: v.id("artist"),
+    lyrics: v.optional(v.string()), // Add lyrics to the action args
     image: v.bytes(), // cover image binary
     audio: v.bytes(), // audio file (mp3) binary
     imageFilename: v.optional(v.string()),
@@ -63,11 +66,12 @@ export const uploadSong = action({
     const songId = await ctx.runMutation("artist:createSongMinimal", {
       title: args.title,
       artist_id: args.artist_id,
+      lyrics: args.lyrics,
     });
 
     // 2) Build multipart form-data for the existing backend
     const formData = new FormData();
-    formData.append("song_id", String(songId)); // send Convex ID as-is
+    formData.append("song_id", String(songId));
 
     const audioBlob = new Blob([args.audio], {
       type: args.audioMimeType ?? "audio/mpeg",

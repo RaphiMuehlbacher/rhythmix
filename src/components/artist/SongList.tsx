@@ -34,8 +34,10 @@ export default function SongsList({ artistId }: { artistId: Id<"artist"> }) {
                 />
                 <div className="flex-1">
                   <h3 className="font-medium text-white">{song.title}</h3>
-                  {/* Duration and plays aren't in schema; hardcode NA for now */}
-                  <p className="text-sm text-gray-400">NA • NA plays</p>
+                  <p className="text-sm text-gray-400">
+                    {Math.floor(song.duration / 1000 / 60)}:
+                    {String(Math.round((song.duration / 1000) % 60)).padStart(2, "0")} • NA plays
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">

@@ -17,7 +17,7 @@ import type { Id } from "../../../convex/_generated/dataModel"
 
 const songFormSchema = z.object({
   title: z.string().min(1, "Song title is required"),
-  lyrics: z.string().optional(), // Ignored for now
+  lyrics: z.string().optional(),
 })
 
 type SongFormValues = z.infer<typeof songFormSchema>
@@ -63,6 +63,7 @@ export default function SongForm() {
 
       await uploadSong({
         title: values.title,
+        lyrics: values.lyrics || "", // Include lyrics in the upload
         artist_id: ARTIST_ID, // hardcoded
         image: imageArrayBuffer,
         audio: audioArrayBuffer,
@@ -98,7 +99,6 @@ export default function SongForm() {
           )}
         />
 
-        {/* Kept visible but ignored in submit */}
         <FormField
           control={form.control}
           name="lyrics"

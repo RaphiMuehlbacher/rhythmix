@@ -8,6 +8,7 @@ export default defineSchema({
     title: v.string(),
     artist: v.id("artist"),
     duration: v.float64(),
+    lyrics: v.string(),
     audioUrl: v.optional(v.string()),
     image: v.optional(v.string()),
   }),
