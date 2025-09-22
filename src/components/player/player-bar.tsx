@@ -1,8 +1,10 @@
 import React, {useEffect, useState} from "react";
-import {usePlayer} from "../../context/player-context";
+import {usePlayerStore} from "@/stores/player-store.ts";
 
 export default function PlayerMusicBar() {
-	const {progress, seek, duration} = usePlayer();
+	const progress = usePlayerStore(state => state.progress);
+	const duration = usePlayerStore(state => state.duration);
+	const seek = usePlayerStore(state => state.seek);
 
 	const [dragPosition, setDragPosition] = useState<number | null>(null);
 	const displayPosition = dragPosition ?? progress;
