@@ -1,8 +1,10 @@
 import React, {useEffect, useState} from "react";
-import {usePlayer} from "@/context/player-context.tsx";
+import {usePlayerStore} from "@/stores/player-store.ts";
 
 export default function VolumeBar() {
-	const {volume, setVolume} = usePlayer();
+	const volume = usePlayerStore(state => state.volume);
+	const setVolume = usePlayerStore(state => state.setVolume);
+
 	const [lastVolume, setLastVolume] = useState(0);
 	const [dragVolume, setDragVolume] = useState<number | null>(null);
 	const displayVolume = dragVolume ?? volume;

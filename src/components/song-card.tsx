@@ -1,23 +1,21 @@
-import {usePlayer} from "@/context/player-context.tsx";
+import type {Id} from "../../convex/_generated/dataModel";
+import {usePlayerStore} from "@/stores/player-store.ts";
 
-export default function SongCard({title, artist, image, audioUrl}: {
-	title: string;
-	artist: string;
-	image: string;
-	audioUrl: string
+export default function SongCard({id, title, artist, image}: {
+	id: Id<"songs">,
+	title: string,
+	artist: string,
+	image: string,
 }) {
-	const {playTrack} = usePlayer();
 
-	const handlePlay = () => {
-		playTrack(audioUrl);
-	}
+	const playTrack = usePlayerStore(state => state.playTrack);
 
 	return (
 			<div className="flex flex-col p-[9px] rounded-md cursor-pointer hover:bg-neutral-800 group">
 				<div className="relative">
 					<img width={300} height={300} className="rounded-lg w-full group" src={image} alt={title}/>
 					<button
-							onClick={handlePlay}
+							onClick={() => playTrack(id)}
 							className="hidden group-hover:flex items-center justify-center absolute bottom-2 right-2 rounded-full bg-green-500 size-12 p-2 transition-transform transform hover:scale-[1.03] duration-75"
 					>
 						<svg viewBox="0 0 16 16" className="size-6 transition-transform transform hover:scale-[1.03] duration-75">
