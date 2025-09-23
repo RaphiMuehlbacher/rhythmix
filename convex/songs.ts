@@ -1,23 +1,35 @@
-import { query } from "./_generated/server"
+import {query} from "./_generated/server";
 import { v } from "convex/values"
 
-export const get = query({
-  args: {},
-  handler: async (ctx) => {
-    const songs = await ctx.db.query("songs").collect()
-    return await Promise.all(
-      songs.map(async (song) => {
-        const artist = await ctx.db.get(song.artist)
-        return {
-          ...song,
-          artist: artist?.name ?? "Unknown",
-        }
-      })
-    )
-  },
-})
 
-// New: fetch only songs for a specific artist
+export const all = query({
+	args: {},
+	handler: async (ctx) => {
+		const songs = await ctx.db.query("tracks").collect();
+
+		return await Promise.all(songs.map(async (song) => {
+			const artist = await ctx.db.get(song.artistId);
+			return {
+				...song,
+				artist: artist?.name ?? "Unknown"
+			}
+		}))
+	},
+});
+
+export const get = query({
+	args: {trackId: v.id("tracks")},
+	handler: async (ctx, args) => {
+		const song = await ctx.db.get(args.trackId);
+		if (!song) throw Error("something went wrong");
+
+		const artist = await ctx.db.get(song.artistId);
+		if (!artist) throw Error("something went wrong");
+
+		return {...song, artist: artist};
+	},
+});
+
 export const byArtist = query({
   args: { artistId: v.id("artist") },
   handler: async (ctx, { artistId }) => {
@@ -32,4 +44,4 @@ export const byArtist = query({
     // Keep original fields and add artistName; duration/plays not in schema
     return songs.map((s) => ({ ...s, artistName }))
   },
-})
+});

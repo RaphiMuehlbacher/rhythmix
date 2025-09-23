@@ -1,8 +1,10 @@
 import PlayerBar from "@/components/player/player-bar.tsx";
-import {usePlayer} from "@/context/player-context.tsx";
+import {usePlayerStore} from "@/stores/player-store.ts";
 
 export default function PlayerMain() {
-	const {isPlaying, togglePlay} = usePlayer();
+	const isPlaying = usePlayerStore(state => state.isPlaying);
+	const togglePlay = usePlayerStore(state => state.togglePlay);
+
 	const shuffle = false;
 	const repeatMode = 0;
 

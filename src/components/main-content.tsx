@@ -3,7 +3,7 @@ import {useQuery} from "convex/react";
 import {api} from "../../convex/_generated/api";
 
 export default function MainContent() {
-	const songs = useQuery(api.songs.get);
+	const songs = useQuery(api.songs.all);
 	if (songs == undefined) {
 		return <h1>Error</h1>
 	}
@@ -17,10 +17,10 @@ export default function MainContent() {
 		>
 			{songs.slice(0, 10).map((track) => (
 					<SongCard
+							id={track._id}
 							title={track.title}
 							artist={track.artist}
-							image={track.image}
-							audioUrl={track.audioUrl}
+							image={track.coverUrl}
 							key={track._id}
 					/>
 			))}
