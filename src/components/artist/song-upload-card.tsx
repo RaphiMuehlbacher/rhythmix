@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Music } from "lucide-react"
-import SongForm from "@/components/artist/SongForm"
+import SongForm from "@/components/artist/song-form.tsx"
 
 export default function SongUploadCard() {
   return (

@@ -1,5 +1,5 @@
 import {useQuery} from "convex/react";
-import ArtistForm from "@/components/artist/ArtistForm";
+import ArtistForm from "@/components/artist/artist-form.tsx";
 import {api} from "../../../convex/_generated/api";
 
 export default function ProfileCard() {

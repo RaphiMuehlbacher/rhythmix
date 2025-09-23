@@ -1,6 +1,6 @@
-import ProfileCard from "@/components/artist/ProfileCard"
-import SongUploadCard from "@/components/artist/SongUploadCard"
-import SongsList from "@/components/artist/SongList.tsx";
+import ProfileCard from "@/components/artist/profile-card.tsx"
+import SongUploadCard from "@/components/artist/song-upload-card.tsx"
+import SongsList from "@/components/artist/song-list.tsx";
 
 export default function ArtistPage() {
 	return (
