@@ -116,7 +116,6 @@ export const uploadSong = action({
 		});
 		formData.append("cover", coverBlob, args.imageFilename ?? "cover.webp");
 
-		console.log(formData);
 		const res = await fetch("https://api-rhythmix.redstphillip.uk/upload-song", {
 			method: "POST",
 			body: formData,

@@ -93,6 +93,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 					audioUrl: track.audioUrl,
 					coverUrl: track.coverUrl,
 				},
+				isPlaying: true,
 				progress: 0,
 				duration: audio.duration * 1000
 			})

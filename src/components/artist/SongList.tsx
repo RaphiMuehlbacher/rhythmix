@@ -1,6 +1,6 @@
 import {Card, CardHeader, CardTitle, CardContent} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
-import {Play, Edit2} from "lucide-react"
+import {Edit2} from "lucide-react"
 import {useQuery} from "convex/react"
 import {api} from "../../../convex/_generated/api"
 
@@ -42,10 +42,7 @@ export default function SongsList() {
 													{String(Math.round((song.duration / 1000) % 60)).padStart(2, "0")} • NA plays
 												</p>
 											</div>
-											<div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-												<Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-													<Play className="w-4 h-4"/>
-												</Button>
+											<div className="opacity-0 group-hover:opacity-40 transition-opacity">
 												<Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
 													<Edit2 className="w-4 h-4"/>
 												</Button>
