@@ -4,10 +4,10 @@ import {api} from "../../convex/_generated/api";
 
 export default function MainContent() {
 	const tracks = useQuery(api.tracks.all);
+
 	if (tracks == undefined) {
 		return <h1>Error</h1>
 	}
-
 
 	return <div className="bg-primary rounded-lg">
 		<div

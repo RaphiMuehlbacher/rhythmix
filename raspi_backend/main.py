@@ -7,9 +7,9 @@ from mutagen import File as MutagenFile
 
 app = FastAPI()
 
-SONGS_DIR = Path("/var/www/html/rhythmix/audio_files")       # HLS output base
+SONGS_DIR = Path("/var/www/html/rhythmix/audio_files")  # HLS output base
 UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
-COVER_DIR = Path("/var/www/html/rhythmix/covers")           # cover images
+COVER_DIR = Path("/var/www/html/rhythmix/covers")  # cover images
 PROFILE_IMG_DIR = Path("/var/www/html/rhythmix/profile-images")  # profile images
 
 ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
@@ -32,9 +32,9 @@ def get_audio_duration(path: Path) -> int:
 
 @app.post("/upload-song")
 async def upload_audio(
-    song_id: str = Form(...),
-    file: UploadFile = File(...),
-    cover: UploadFile = File(...),
+        song_id: str = Form(...),
+        file: UploadFile = File(...),
+        cover: UploadFile = File(...),
 ):
     ext_audio = Path(file.filename).suffix.lower()
     ext_cover = Path(cover.filename).suffix.lower()
@@ -105,16 +105,17 @@ async def upload_audio(
 
     return {
         "status": "success",
-        "songId": song_id,
+        "trackId": song_id,
         "duration": duration_ms,
         "filePath": str(hls_output),
         "coverPath": str(cover_path),
     }
 
+
 @app.post("/upload-profile-picture")
 async def upload_profile_picture(
-    artist_id: str = Form(...),
-    file: UploadFile = File(...),
+        artist_id: str = Form(...),
+        file: UploadFile = File(...),
 ):
     # Validate extension
     ext = Path(file.filename).suffix.lower()
@@ -134,4 +135,3 @@ async def upload_profile_picture(
         "artistId": artist_id,
         "filename": str(filename),
     }
-
