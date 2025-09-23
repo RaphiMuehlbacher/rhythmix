@@ -26,7 +26,7 @@ export const getArtistByCurrentUser = query({
 
 		if (!userId) throw new Error("Not authenticated");
 
-		const artist = await ctx.db.query("artists").withIndex("by_userId").unique();
+		const artist = await ctx.db.query("artists").withIndex("by_userId", (q) => q.eq("userId", userId)).unique();
 		if (!artist) throw new Error("Something went wrong");
 
 		return {

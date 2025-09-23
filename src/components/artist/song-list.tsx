@@ -20,7 +20,6 @@ export default function SongsList() {
 					<p className="text-gray-400">Manage your uploaded tracks</p>
 				</CardHeader>
 				<CardContent>
-					{!tracks && <p className="text-gray-400">Loading songs…</p>}
 					{tracks?.length === 0 && <p className="text-gray-400">No songs yet.</p>}
 
 					{tracks && tracks.length > 0 && (
