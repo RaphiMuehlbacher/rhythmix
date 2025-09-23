@@ -5,12 +5,12 @@ import { v } from "convex/values"
 export const all = query({
 	args: {},
 	handler: async (ctx) => {
-		const songs = await ctx.db.query("tracks").collect();
+		const tracks = await ctx.db.query("tracks").collect();
 
-		return await Promise.all(songs.map(async (song) => {
-			const artist = await ctx.db.get(song.artistId);
+		return await Promise.all(tracks.map(async (track) => {
+			const artist = await ctx.db.get(track.artistId);
 			return {
-				...song,
+				...track,
 				artist: artist?.name ?? "Unknown"
 			}
 		}))
@@ -31,17 +31,16 @@ export const get = query({
 });
 
 export const byArtist = query({
-  args: { artistId: v.id("artist") },
-  handler: async (ctx, { artistId }) => {
-    const songs = await ctx.db
-      .query("songs")
-      .filter((q) => q.eq(q.field("artist"), artistId))
+  args: { artistId: v.id("artists") },
+  handler: async (ctx, args) => {
+    const tracks = await ctx.db
+      .query("tracks")
+      .withIndex("by_artistId", (q) => q.eq("artistId",args.artistId))
       .collect()
 
-    const artist = await ctx.db.get(artistId)
+    const artist = await ctx.db.get(args.artistId)
     const artistName = artist?.name ?? "Unknown"
 
-    // Keep original fields and add artistName; duration/plays not in schema
-    return songs.map((s) => ({ ...s, artistName }))
+    return tracks.map((s) => ({ ...s, artistName }))
   },
 });

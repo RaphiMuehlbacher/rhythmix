@@ -28,9 +28,9 @@ export default function ArtistForm({ defaultValues }: ArtistFormProps) {
   const [file, setFile] = useState<File | null>(null)
   const [filePreview, setFilePreview] = useState<string | undefined>()
 
-  const uploadProfilePic = useAction(api.artist.uploadArtistProfilePic);
-  const updateProfilePic = useMutation(api.artist.updateArtistProfilePic);
-  const updateArtist = useMutation(api.artist.updateArtist);
+  const uploadProfilePic = useAction(api.artists.uploadArtistProfilePic);
+  const updateProfilePic = useMutation(api.artists.updateArtistProfilePic);
+  const updateArtist = useMutation(api.artists.updateArtist);
 
   const form = useForm<ArtistFormValues>({
     resolver: zodResolver(artistFormSchema),

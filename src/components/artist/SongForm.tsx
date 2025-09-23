@@ -26,7 +26,7 @@ export default function SongForm() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  const uploadSong = useAction(api.artist.uploadSong)
+  const uploadSong = useAction(api.artists.uploadSong)
 
   const form = useForm<SongFormValues>({
     resolver: zodResolver(songFormSchema),

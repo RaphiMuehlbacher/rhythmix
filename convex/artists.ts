@@ -4,7 +4,7 @@ import {getAuthUserId} from "@convex-dev/auth/server";
 import {api} from "./_generated/api";
 
 export const get = query({
-  args: { id: v.id("artist") },
+  args: { id: v.id("artists") },
   handler: async (ctx, args) => {
     const artist = await ctx.db.get(args.id);
     if (!artist) return null;
@@ -22,9 +22,10 @@ export const get = query({
 export const getArtistByCurrentUser = query({
   handler: async(ctx) => {
     const userId = await getAuthUserId(ctx);
+
     if (!userId) throw new Error("Not authenticated");
 
-    const artist = await ctx.db.query("artist").withIndex("by_userId").unique();
+    const artist = await ctx.db.query("artists").withIndex("by_userId").unique();
     if (!artist) throw new Error("Something went wrong");
 
     return artist
@@ -34,15 +35,17 @@ export const getArtistByCurrentUser = query({
 export const createSongMinimal = mutation({
   args: {
     title: v.string(),
-    artistId: v.id("artist"),
+    artistId: v.id("artists"),
     lyrics: v.optional(v.string()),
   },
   handler: async (ctx, { title, artistId, lyrics }) => {
-    const songId = await ctx.db.insert("songs", {
+    const songId = await ctx.db.insert("tracks", {
       title,
-      artist: artistId,
+      artistId: artistId,
       duration: 0,
       lyrics: lyrics || "",
+      coverUrl: "",
+      audioUrl: "",
     });
     return songId;
   },
@@ -50,7 +53,7 @@ export const createSongMinimal = mutation({
 
 export const updateSongAfterUpload = mutation({
   args: {
-    songId: v.id("songs"),
+    songId: v.id("tracks"),
     duration: v.float64(),
     audioUrl: v.string(),
     coverUrl: v.string(),
@@ -76,10 +79,10 @@ export const uploadSong = action({
     audioMimeType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const artist = await ctx.runQuery(api.artist.getArtistByCurrentUser);
+    const artist = await ctx.runQuery(api.artists.getArtistByCurrentUser);
     if (!artist) throw new Error("something went wrong");
 
-    const songId = await ctx.runMutation(api.artist.createSongMinimal, {
+    const songId = await ctx.runMutation(api.artists.createSongMinimal, {
       title: args.title,
       artist_id: artist.id,
       lyrics: args.lyrics,
@@ -123,7 +126,7 @@ export const uploadSong = action({
     const coverFilename = data.coverPath.split("/").pop() ?? "cover.webp";
     const coverUrl = `https://rhythmix.redstphillip.uk/rhythmix/covers/${coverFilename}`;
 
-    await ctx.runMutation(api.artist.updateSongAfterUpload, {
+    await ctx.runMutation(api.artists.updateSongAfterUpload, {
       songId,
       duration: data.duration,
       audioUrl,
@@ -148,7 +151,7 @@ export const updateArtistProfilePic = mutation({
     profilePicUrl: v.string(),
   },
   handler: async (ctx, args) => {
-    const artist = await ctx.runQuery(api.artist.getArtistByCurrentUser);
+    const artist = await ctx.runQuery(api.artists.getArtistByCurrentUser);
     if (!artist) throw new Error("something went wrong");
 
 
@@ -162,7 +165,7 @@ export const updateArtist = mutation({
     description: v.string(),
   },
   handler: async (ctx, { name, description }) => {
-    const artist = await ctx.runQuery(api.artist.getArtistByCurrentUser);
+    const artist = await ctx.runQuery(api.artists.getArtistByCurrentUser);
     if (!artist) throw new Error("something went wrong");
 
     await ctx.db.patch(artist.id, { name, description });
@@ -176,7 +179,7 @@ export const uploadArtistProfilePic = action({
     imageMimeType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const artist = await ctx.runQuery(api.artist.getArtistByCurrentUser);
+    const artist = await ctx.runQuery(api.artists.getArtistByCurrentUser);
     if (!artist) throw new Error("something went wrong");
 
     const formData = new FormData();

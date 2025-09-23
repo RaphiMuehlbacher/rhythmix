@@ -11,14 +11,8 @@ export default function App() {
 			<>
 				<PlayerStoreInjector/>
 				<Routes>
-						<ProtectedRoute>
-
-					<Route path="/" element={
-							<Home/>
-					}/>
-              <Route path="/artist" element={<Artist/>}/>
-
-						</ProtectedRoute>
+          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/artist" element={<ProtectedRoute><Artist /></ProtectedRoute>}/>
 
 					<Route path="/login" element={<Login/>}/>
 					<Route path="/sign-up" element={<SignUp/>}/>

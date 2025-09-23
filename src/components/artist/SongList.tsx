@@ -5,10 +5,10 @@ import { useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 
 export default function SongsList() {
-  const artist = useQuery(api.artist.getArtistByCurrentUser);
+  const artist = useQuery(api.artists.getArtistByCurrentUser);
   if (!artist) throw new Error("not authenticated");
 
-  const songs = useQuery(api.songs.byArtist, {artistId: artist._id});
+  const tracks = useQuery(api.tracks.byArtist, {artistId: artist._id});
 
   return (
     <Card className="bg-neutral-900 border-neutral-800">
@@ -17,12 +17,12 @@ export default function SongsList() {
         <p className="text-gray-400">Manage your uploaded tracks</p>
       </CardHeader>
       <CardContent>
-        {!songs && <p className="text-gray-400">Loading songs…</p>}
-        {songs?.length === 0 && <p className="text-gray-400">No songs yet.</p>}
+        {!tracks && <p className="text-gray-400">Loading songs…</p>}
+        {tracks?.length === 0 && <p className="text-gray-400">No songs yet.</p>}
 
-        {songs && songs.length > 0 && (
+        {tracks && tracks.length > 0 && (
           <div className="space-y-3">
-            {songs.map((song) => (
+            {tracks.map((song) => (
               <div
                 key={song._id}
                 className="flex items-center gap-4 p-3 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 transition-colors group"

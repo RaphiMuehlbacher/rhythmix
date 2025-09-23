@@ -3,7 +3,7 @@ import ArtistForm from "@/components/artist/ArtistForm";
 import { api } from "../../../convex/_generated/api";
 
 export default function ProfileCard() {
-  const artistData = useQuery(api.artist.getArtistByCurrentUser);
+  const artistData = useQuery(api.artists.getArtistByCurrentUser);
   if (!artistData) return <p>Loading artist...</p>;
 
   return (

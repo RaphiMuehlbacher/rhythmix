@@ -6,12 +6,13 @@ export default defineSchema({
 	...authTables,
 	tracks: defineTable({
 		title: v.string(),
-		artistId: v.id("artist"),
+		artistId: v.id("artists"),
     duration: v.float64(),
     lyrics: v.string(),
 		coverUrl: v.string(),
 		audioUrl: v.string(),
-	}),
+	}).index("by_artistId", ["artistId"]),
+
 	artists: defineTable({
 		userId: v.id("users"),
     name: v.string(),
