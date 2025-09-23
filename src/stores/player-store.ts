@@ -73,7 +73,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 
 		playTrack: async (id: Id<"tracks">) => {
 			const convex = get().convexClient;
-			const track = await convex?.query(api.songs.get, {trackId: id});
+			const track = await convex?.query(api.tracks.get, {trackId: id});
 			if (!track) throw new Error("Something went wrong");
 
 			if (!get().hls) {
@@ -93,6 +93,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 					audioUrl: track.audioUrl,
 					coverUrl: track.coverUrl,
 				},
+				isPlaying: true,
 				progress: 0,
 				duration: audio.duration * 1000
 			})

@@ -9,7 +9,7 @@ export default function PlayerSongInfo() {
 
 	return (
 			<div className="flex items-center justify-start gap-3">
-				<img className="size-15 rounded" src={track.image}
+				<img className="size-15 rounded" src={track.coverUrl}
 						 alt={track.title}/>
 				<div>
 					<p className="text-[15px]">{track.title}</p>

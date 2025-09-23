@@ -7,13 +7,20 @@ export default defineSchema({
 	tracks: defineTable({
 		title: v.string(),
 		artistId: v.id("artists"),
+    duration: v.float64(),
+    lyrics: v.string(),
 		coverUrl: v.string(),
 		audioUrl: v.string(),
-	}),
+	}).index("by_artistId", ["artistId"]),
+
 	artists: defineTable({
-		name: v.string()
-	}),
-	playbackStates: defineTable({
+		userId: v.id("users"),
+    name: v.string(),
+    description: v.string(),
+    profilePicUrl: v.string(),
+  }).index("by_userId", ["userId"]),
+
+  playbackStates: defineTable({
 		userId: v.id("users"),
 		currentTrackId: v.id("tracks"),
 	}).index("by_userId", ["userId"]),
