@@ -2,10 +2,10 @@ import type {Id} from "../../convex/_generated/dataModel";
 import type {Artist} from "@/types/artist.ts";
 
 export type Track = {
-	id: Id<"songs">,
+	id: Id<"tracks">,
 	title: string,
 	artist: Artist,
-	image: string,
+	coverUrl: string,
 	audioUrl: string,
 }
 

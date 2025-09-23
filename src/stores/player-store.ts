@@ -19,7 +19,7 @@ type PlayerStore = {
 	volume: number;
 
 	setVolume: (volume: number) => void;
-	playTrack: (id: Id<"songs">) => Promise<void>;
+	playTrack: (id: Id<"tracks">) => Promise<void>;
 	pause: () => void;
 	resume: () => void;
 	togglePlay: () => void;
@@ -34,8 +34,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 		audio,
 		hls: null,
 		convexClient: null,
-		isPlaying: false,
 		track: null,
+		isPlaying: false,
+		trackId: null,
 		progress: 0,
 		duration: 0,
 		volume: audio.volume * 100,
@@ -70,7 +71,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 			set({progress: ms});
 		},
 
-		playTrack: async (id: Id<"songs">) => {
+		playTrack: async (id: Id<"tracks">) => {
 			const convex = get().convexClient;
 			const track = await convex?.query(api.songs.get, {trackId: id});
 			if (!track) throw new Error("Something went wrong");
@@ -90,9 +91,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 					title: track.title,
 					artist: {id: track.artist._id, name: track.artist.name},
 					audioUrl: track.audioUrl,
-					image: track.image,
+					coverUrl: track.coverUrl,
 				},
-				isPlaying: true,
 				progress: 0,
 				duration: audio.duration * 1000
 			})

@@ -2,7 +2,7 @@ import type {Id} from "../../convex/_generated/dataModel";
 import {usePlayerStore} from "@/stores/player-store.ts";
 
 export default function SongCard({id, title, artist, image}: {
-	id: Id<"songs">,
+	id: Id<"tracks">,
 	title: string,
 	artist: string,
 	image: string,

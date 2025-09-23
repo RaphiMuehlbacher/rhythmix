@@ -4,17 +4,17 @@ import {authTables} from "@convex-dev/auth/server";
 
 export default defineSchema({
 	...authTables,
-	songs: defineTable({
+	tracks: defineTable({
 		title: v.string(),
-		artist: v.id("artists"),
-		image: v.string(),
+		artistId: v.id("artists"),
+		coverUrl: v.string(),
 		audioUrl: v.string(),
 	}),
 	artists: defineTable({
 		name: v.string()
 	}),
 	playbackStates: defineTable({
-		user: v.id("users"),
-		currentTrack: v.id("songs"),
-	}).index("by_user", ["user"]),
+		userId: v.id("users"),
+		currentTrackId: v.id("tracks"),
+	}).index("by_userId", ["userId"]),
 });

@@ -20,7 +20,7 @@ export default function MainContent() {
 							id={track._id}
 							title={track.title}
 							artist={track.artist}
-							image={track.image}
+							image={track.coverUrl}
 							key={track._id}
 					/>
 			))}
