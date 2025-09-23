@@ -10,11 +10,12 @@ export default defineSchema({
     duration: v.float64(),
     lyrics: v.string(),
     audioUrl: v.optional(v.string()),
-    image: v.optional(v.string()),
+    coverUrl: v.optional(v.string()),
   }),
   artist: defineTable({
+    userId: v.id("users"),
     name: v.string(),
     description: v.string(),
-    profile_pic_url: v.string(),
-  }),
+    profilePicUrl: v.string(),
+  }).index("by_userId", ["userId"]),
 });

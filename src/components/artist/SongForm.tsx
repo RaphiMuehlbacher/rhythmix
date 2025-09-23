@@ -1,5 +1,3 @@
-"use client"
-
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -13,17 +11,13 @@ import { useDropzone } from "react-dropzone"
 
 import { useAction } from "convex/react"
 import { api } from "../../../convex/_generated/api"
-import type { Id } from "../../../convex/_generated/dataModel"
 
 const songFormSchema = z.object({
   title: z.string().min(1, "Song title is required"),
   lyrics: z.string().min(1, "Lyrics are required"),
 })
 
-
 type SongFormValues = z.infer<typeof songFormSchema>
-
-const ARTIST_ID = "j574dnpwv03zg4hmgfz662ahrn7qvgr5" as Id<"artist">
 
 export default function SongForm() {
   const [songCoverFile, setSongCoverFile] = useState<File | null>(null)
@@ -39,7 +33,7 @@ export default function SongForm() {
     defaultValues: { title: "", lyrics: "" },
   })
 
-  // Dropzone for cover image (.png, .jpg, .jpeg, .webp)
+
   const coverDropzone = useDropzone({
     accept: { "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"], "image/webp": [".webp"] },
     multiple: false,
@@ -48,7 +42,6 @@ export default function SongForm() {
     },
   })
 
-  // Dropzone for audio file (.mp3, .wav, .flac, .m4a)
   const audioDropzone = useDropzone({
     accept: {
       "audio/mpeg": [".mp3"],
@@ -61,6 +54,7 @@ export default function SongForm() {
       if (acceptedFiles.length > 0) setAudioFile(acceptedFiles[0])
     },
   })
+
 
   const onSubmit = async (values: SongFormValues) => {
     setError(null)
@@ -86,7 +80,6 @@ export default function SongForm() {
       await uploadSong({
         title: values.title,
         lyrics: values.lyrics || "",
-        artist_id: ARTIST_ID,
         image: imageArrayBuffer,
         audio: audioArrayBuffer,
         imageFilename: songCoverFile.name,
@@ -99,8 +92,12 @@ export default function SongForm() {
       form.reset()
       setSongCoverFile(null)
       setAudioFile(null)
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to upload song. Please try again.")
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message)
+      } else {
+        setError("Failed to upload song. Please try again.")
+      }
     } finally {
       setSubmitting(false)
     }
@@ -109,7 +106,6 @@ export default function SongForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Song title */}
         <FormField
           control={form.control}
           name="title"
@@ -122,7 +118,6 @@ export default function SongForm() {
           )}
         />
 
-        {/* Lyrics */}
         <FormField
           control={form.control}
           name="lyrics"
@@ -138,7 +133,6 @@ export default function SongForm() {
           )}
         />
 
-        {/* Dropzone for cover image */}
         <div
           {...coverDropzone.getRootProps()}
           className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition ${
@@ -152,7 +146,6 @@ export default function SongForm() {
           </p>
         </div>
 
-        {/* Dropzone for audio file */}
         <div
           {...audioDropzone.getRootProps()}
           className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition ${
@@ -166,11 +159,9 @@ export default function SongForm() {
           </p>
         </div>
 
-        {/* Messages */}
         {error && <p className="text-red-500 text-sm" role="alert">{error}</p>}
         {success && <p className="text-green-500 text-sm" role="status">{success}</p>}
 
-        {/* Submit */}
         <Button
           type="submit"
           className="w-full bg-neutral-700 hover:bg-neutral-500 text-white disabled:opacity-50"

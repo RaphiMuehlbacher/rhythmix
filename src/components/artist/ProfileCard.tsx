@@ -1,12 +1,9 @@
-"use client";
-
 import { useQuery } from "convex/react";
 import ArtistForm from "@/components/artist/ArtistForm";
 import { api } from "../../../convex/_generated/api";
-import type {Id} from "../../../convex/_generated/dataModel";
 
-export default function ProfileCard({ artistId }: { artistId: string }) {
-  const artistData = useQuery(api.artist.getArtist, { id: artistId as Id<"artist"> });
+export default function ProfileCard() {
+  const artistData = useQuery(api.artist.getArtistByCurrentUser);
   if (!artistData) return <p>Loading artist...</p>;
 
   return (

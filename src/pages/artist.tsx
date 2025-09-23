@@ -1,9 +1,6 @@
-"use client"
-
 import ProfileCard from "@/components/artist/ProfileCard"
 import SongUploadCard from "@/components/artist/SongUploadCard"
 import SongsList from "@/components/artist/SongList.tsx";
-import type {Id} from "../../convex/_generated/dataModel";
 
 export default function ArtistPage() {
   return (
@@ -15,11 +12,10 @@ export default function ArtistPage() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ProfileCard artistId={"j574dnpwv03zg4hmgfz662ahrn7qvgr5"} />
+          <ProfileCard />
           <SongUploadCard />
         </div>
-
-         <SongsList artistId={"j574dnpwv03zg4hmgfz662ahrn7qvgr5" as Id<"artist">} />
+         <SongsList/>
       </div>
     </div>
   )

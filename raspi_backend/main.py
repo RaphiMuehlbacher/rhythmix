@@ -7,17 +7,16 @@ from mutagen import File as MutagenFile
 
 app = FastAPI()
 
-# Directories
 SONGS_DIR = Path("/var/www/html/rhythmix/audio_files")       # HLS output base
 UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
 COVER_DIR = Path("/var/www/html/rhythmix/covers")           # cover images
+PROFILE_IMG_DIR = Path("/var/www/html/rhythmix/profile-images")  # profile images
 
-# Allowed file types
 ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
 ALLOWED_COVER_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+ALLOWED_PROFILE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
-# Ensure base folders exist
-for d in (SONGS_DIR, UPLOAD_DIR, COVER_DIR):
+for d in (SONGS_DIR, UPLOAD_DIR, COVER_DIR, PROFILE_IMG_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
 
@@ -31,13 +30,12 @@ def get_audio_duration(path: Path) -> int:
         return 0
 
 
-@app.post("/upload")
+@app.post("/upload-song")
 async def upload_audio(
     song_id: str = Form(...),
     file: UploadFile = File(...),
     cover: UploadFile = File(...),
 ):
-    # Validate extensions
     ext_audio = Path(file.filename).suffix.lower()
     ext_cover = Path(cover.filename).suffix.lower()
     if ext_audio not in ALLOWED_AUDIO_EXTENSIONS:
@@ -107,8 +105,33 @@ async def upload_audio(
 
     return {
         "status": "success",
-        "song_id": song_id,
+        "songId": song_id,
         "duration": duration_ms,
-        "filepath": str(hls_output),
-        "coverpath": str(cover_path),
+        "filePath": str(hls_output),
+        "coverPath": str(cover_path),
     }
+
+@app.post("/upload-profile-picture")
+async def upload_profile_picture(
+    artist_id: str = Form(...),
+    file: UploadFile = File(...),
+):
+    # Validate extension
+    ext = Path(file.filename).suffix.lower()
+    if ext not in ALLOWED_PROFILE_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only files with extensions {sorted(ALLOWED_PROFILE_EXTENSIONS)} are allowed"
+        )
+
+    filename = f"{artist_id}{ext}"
+    profile_path = PROFILE_IMG_DIR / filename
+    print(profile_path)
+    with open(profile_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {
+        "status": "success",
+        "artistId": artist_id,
+        "filename": str(filename),
+    }
+

@@ -1,6 +1,4 @@
-"use client"
-
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -8,108 +6,90 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Edit2, Upload } from "lucide-react"
+import { Dropzone, DropzoneContent } from "@/components/ui/shadcn-io/dropzone"
+import { Edit2 } from "lucide-react"
+import {useAction, useMutation} from "convex/react";
+import {api} from "../../../convex/_generated/api";
 
 const artistFormSchema = z.object({
   name: z.string().min(1, "Artist name is required"),
   description: z.string().min(1, "Description is required"),
-  profile_pic_url: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal(""))
-    .refine((val) => !val || typeof val === "string", "Invalid profile picture URL"),
+  profile_pic_url: z.string().trim().optional().or(z.literal("")),
 })
 
 export type ArtistFormValues = z.infer<typeof artistFormSchema>
 
 interface ArtistFormProps {
   defaultValues: ArtistFormValues
-  onSubmit?: (values: ArtistFormValues, profileImageFile: File | null) => void
 }
 
-export default function ArtistForm({ defaultValues, onSubmit }: ArtistFormProps) {
+export default function ArtistForm({ defaultValues }: ArtistFormProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [dragActive, setDragActive] = useState(false)
-  const [profileImage, setProfileImage] = useState<File | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [filePreview, setFilePreview] = useState<string | undefined>()
 
-  const profileImageRef = useRef<HTMLInputElement>(null)
+  const uploadProfilePic = useAction(api.artist.uploadArtistProfilePic);
+  const updateProfilePic = useMutation(api.artist.updateArtistProfilePic);
+  const updateArtist = useMutation(api.artist.updateArtist);
 
   const form = useForm<ArtistFormValues>({
     resolver: zodResolver(artistFormSchema),
-    defaultValues: {
-      name: defaultValues.name,
-      description: defaultValues.description,
-      profile_pic_url: defaultValues.profile_pic_url ?? "",
-    },
+    defaultValues,
   })
 
+
   useEffect(() => {
-    form.reset({
-      name: defaultValues.name,
-      description: defaultValues.description,
-      profile_pic_url: defaultValues.profile_pic_url ?? "",
-    })
-    setProfileImage(null)
-  }, [defaultValues, form])
+    const url = form.getValues("profile_pic_url") || defaultValues.profile_pic_url
+    if (!isEditing || file || !url) return;
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
-    } else if (e.type === "dragleave") {
-      setDragActive(false)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    const files = Array.from(e.dataTransfer.files)
-    if (files.length > 0) {
-      const file = files[0]
-      if (file.type.startsWith("image/")) {
-        setProfileImage(file)
+    (async () => {
+      try {
+        const res = await fetch(url, { mode: "cors" })
+        const blob = await res.blob()
+        const ext = blob.type.split("/")[1] || "jpg"
+        const f = new File([blob], `current-avatar.${ext}`, { type: blob.type })
+        setFile(f)
+        setFilePreview(URL.createObjectURL(blob))
+      } catch {
+        // fallback: just show the remote URL directly
+        setFilePreview(url)
       }
-    }
-  }
+    })()
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file && file.type.startsWith("image/")) {
-      setProfileImage(file)
-    }
-  }
-
-  const previewSrc = useMemo(() => {
-    if (profileImage) return URL.createObjectURL(profileImage)
-    const currentUrl = form.getValues("profile_pic_url")
-    return currentUrl && currentUrl.length > 0 ? currentUrl : "/placeholder.svg"
-  }, [profileImage, form])
-
-  useEffect(() => {
     return () => {
-      if (profileImage) {
-        URL.revokeObjectURL(previewSrc)
-      }
+      if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview)
     }
-  }, [profileImage, previewSrc])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing])
 
-  const submitHandler = (values: ArtistFormValues) => {
-    if (onSubmit) {
-      onSubmit(values, profileImage)
-    } else {
-      console.log("Updated artist:", values)
-      console.log("Selected profile image File (not yet uploaded):", profileImage)
+  // Handle dropping a new file
+  const handleDrop = (files: File[]) => {
+    if (files.length) {
+      const f = files[0]
+      setFile(f)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        if (typeof e.target?.result === "string") setFilePreview(e.target.result)
+      }
+      reader.readAsDataURL(f)
     }
+  }
+
+  const submitHandler = async (values: ArtistFormValues) => {
+    if (file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const { profilePicUrl } = await uploadProfilePic({image: arrayBuffer});
+      await updateProfilePic({profilePicUrl});
+    }
+
+    await updateArtist({name: values.name, description: values.description})
     setIsEditing(false)
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(submitHandler)} className="space-y-6">
+        {/* Edit toggle button */}
         <div className="flex items-center justify-end">
           <Button
             type="button"
@@ -117,77 +97,55 @@ export default function ArtistForm({ defaultValues, onSubmit }: ArtistFormProps)
             size="sm"
             onClick={() => setIsEditing((v) => !v)}
             className="text-gray-400 hover:text-white hover:bg-neutral-700"
-            aria-label={isEditing ? "Stop editing" : "Edit profile"}
-            title={isEditing ? "Stop editing" : "Edit profile"}
           >
             <Edit2 className="w-4 h-4" />
           </Button>
         </div>
 
-        {/* Profile Image Section with Drag & Drop */}
-        <div className="flex flex-col items-center space-y-4 mb-2">
-          <div
-            className={`relative cursor-pointer transition-all duration-200 ${
-              isEditing 
-                ? dragActive 
-                  ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-neutral-900 scale-105" 
-                  : "hover:ring-2 hover:ring-gray-500 hover:ring-offset-2 hover:ring-offset-neutral-900"
-                : ""
-            }`}
-            onDragEnter={isEditing ? handleDrag : undefined}
-            onDragLeave={isEditing ? handleDrag : undefined}
-            onDragOver={isEditing ? handleDrag : undefined}
-            onDrop={isEditing ? handleDrop : undefined}
-            onClick={isEditing ? () => profileImageRef.current?.click() : undefined}
-          >
+        {/* Profile picture */}
+        <div className="relative w-32 h-32 mx-auto">
+          {isEditing ? (
+            <Dropzone
+              accept={{ "image/*": [".png", ".jpg", ".jpeg", ".webp"] }}
+              maxFiles={1}
+              onDrop={handleDrop}
+              onError={console.error}
+              src={file ? [file] : undefined}
+              className="!p-0 !border-0 !bg-transparent rounded-full overflow-hidden cursor-pointer"
+            >
+              <DropzoneContent>
+                <img
+                  src={
+                    filePreview ||
+                    form.getValues("profile_pic_url") ||
+                    defaultValues.profile_pic_url ||
+                    "/placeholder.svg"
+                  }
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover"
+                />
+              </DropzoneContent>
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
+                <Edit2 className="w-6 h-6 text-white" />
+              </div>
+            </Dropzone>
+          ) : (
             <img
-              src={previewSrc}
+              src={form.getValues("profile_pic_url") || defaultValues.profile_pic_url || "/placeholder.svg"}
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover"
             />
-            {isEditing && (
-              <div className={`absolute inset-0 rounded-full flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity ${
-                dragActive ? "opacity-100" : ""
-              }`}>
-                <Upload className="w-8 h-8 text-white" />
-              </div>
-            )}
-          </div>
-
-          <input
-            ref={profileImageRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-            disabled={!isEditing}
-          />
-
-          {isEditing && (
-            <div className="text-center">
-              <Button
-                type="button"
-                variant="outline"
-                className="border-gray-600 text-gray-300 hover:text-gray-100 hover:bg-neutral-800 bg-transparent"
-                onClick={() => profileImageRef.current?.click()}
-              >
-                Change Profile Picture
-              </Button>
-              <p className="text-xs text-gray-500 mt-2">
-                Click or drag & drop an image
-              </p>
-            </div>
           )}
         </div>
 
+        {/* Hidden field for profile_pic_url */}
         <FormField
           control={form.control}
           name="profile_pic_url"
-          render={({ field }) => (
-            <input type="hidden" {...field} />
-          )}
+          render={({ field }) => <input type="hidden" {...field} />}
         />
 
+        {/* Artist name */}
         <FormField
           control={form.control}
           name="name"
@@ -204,6 +162,7 @@ export default function ArtistForm({ defaultValues, onSubmit }: ArtistFormProps)
           )}
         />
 
+        {/* Description */}
         <FormField
           control={form.control}
           name="description"

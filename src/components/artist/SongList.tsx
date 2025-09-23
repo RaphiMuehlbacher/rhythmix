@@ -1,14 +1,14 @@
-"use client"
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Play, Edit2 } from "lucide-react"
 import { useQuery } from "convex/react"
-import { api } from "../../../convex/_generated/api" // adjust path if needed
-import type { Id } from "../../../convex/_generated/dataModel"
+import { api } from "../../../convex/_generated/api"
 
-export default function SongsList({ artistId }: { artistId: Id<"artist"> }) {
-  const songs = useQuery(api.songs.byArtist, { artistId })
+export default function SongsList() {
+  const artist = useQuery(api.artist.getArtistByCurrentUser);
+  if (!artist) throw new Error("not authenticated");
+
+  const songs = useQuery(api.songs.byArtist, {artistId: artist._id});
 
   return (
     <Card className="bg-neutral-900 border-neutral-800">
@@ -28,7 +28,7 @@ export default function SongsList({ artistId }: { artistId: Id<"artist"> }) {
                 className="flex items-center gap-4 p-3 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 transition-colors group"
               >
                 <img
-                  src={song.image || "/placeholder.svg"}
+                  src={song.coverUrl || "/placeholder.svg"}
                   alt={song.title}
                   className="w-12 h-12 rounded object-cover"
                 />
