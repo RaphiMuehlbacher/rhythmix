@@ -4,18 +4,22 @@ import {getAuthUserId} from "@convex-dev/auth/server";
 import {api} from "./_generated/api";
 import type {Id} from "./_generated/dataModel";
 
+export type Artist = {
+	_id: Id<"artists">
+	_creationTime: number,
+	userId: Id<"users">,
+	description: string,
+	name: string,
+	profilePicUrl: string,
+}
+
 export const get = query({
 	args: {id: v.id("artists")},
 	handler: async (ctx, args) => {
 		const artist = await ctx.db.get(args.id);
 		if (!artist) return null;
 
-		return {
-			id: artist._id,
-			name: artist.name,
-			description: artist.description,
-			profilePicUrl: artist.profilePicUrl,
-		};
+		return artist;
 	},
 });
 
@@ -28,12 +32,7 @@ export const getArtistByCurrentUser = query({
 		const artist = await ctx.db.query("artists").withIndex("by_userId", (q) => q.eq("userId", userId)).unique();
 		if (!artist) throw new Error("Something went wrong");
 
-		return {
-			id: artist._id,
-			name: artist.name,
-			description: artist.description,
-			profilePicUrl: artist.profilePicUrl
-		}
+		return artist;
 	}
 })
 
@@ -98,7 +97,7 @@ export const uploadSong = action({
 
 		const trackId = await ctx.runMutation(api.artists.createSongMinimal, {
 			title: args.title,
-			artistId: artist.id,
+			artistId: artist._id,
 			lyrics: args.lyrics,
 		});
 
@@ -165,7 +164,7 @@ export const updateArtistProfilePic = mutation({
 		const artist = await ctx.runQuery(api.artists.getArtistByCurrentUser);
 		if (!artist) throw new Error("something went wrong");
 
-		await ctx.db.patch(artist.id, {profilePicUrl: args.profilePicUrl});
+		await ctx.db.patch(artist._id, {profilePicUrl: args.profilePicUrl});
 	},
 });
 
@@ -178,7 +177,7 @@ export const updateArtist = mutation({
 		const artist = await ctx.runQuery(api.artists.getArtistByCurrentUser);
 		if (!artist) throw new Error("something went wrong");
 
-		await ctx.db.patch(artist.id, {name, description});
+		await ctx.db.patch(artist._id, {name, description});
 	},
 });
 
@@ -193,7 +192,7 @@ export const uploadArtistProfilePic = action({
 		if (!artist) throw new Error("something went wrong");
 
 		const formData = new FormData();
-		formData.append("artist_id", String(artist.id));
+		formData.append("artist_id", String(artist._id));
 
 		const imageBlob = new Blob([args.image], {
 			type: args.imageMimeType ?? "image/png",

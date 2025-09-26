@@ -54,7 +54,7 @@ export default function PlayerMusicBar() {
 
 	return (
 			<div className="flex items-center gap-2">
-				<p className="text-zinc-400 text-[13px] relative top-[-2px]">
+				<p className="text-muted-foreground text-[13px] relative top-[-2px]">
 					{msToMinutesAndSeconds(displayPosition)}
 				</p>
 				<div
@@ -80,7 +80,7 @@ export default function PlayerMusicBar() {
 							}}
 					></div>
 				</div>
-				<p className="text-zinc-400 text-[13px] relative top-[-2px]">
+				<p className="text-muted-foreground text-[13px] relative top-[-2px]">
 					{msToMinutesAndSeconds(duration)}
 				</p>
 			</div>

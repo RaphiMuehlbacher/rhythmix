@@ -25,7 +25,7 @@ export default function SongCard({id, title, artist, image}: {
 					</button>
 				</div>
 				<p className="font-medium text-foreground line-clamp-2 mt-2">{title}</p>
-				<p className="font-medium text-zinc-400 text-sm line-clamp-2">{artist}</p>
+				<p className="font-medium text-muted-foreground text-sm line-clamp-2">{artist}</p>
 			</div>
 	);
 }

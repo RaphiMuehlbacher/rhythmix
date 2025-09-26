@@ -13,7 +13,7 @@ export default function PlayerSongInfo() {
 						 alt={track.title}/>
 				<div>
 					<p className="text-[15px]">{track.title}</p>
-					<p className="text-xs font-semibold text-zinc-400 line-clamp-1">{track.artist.name}</p>
+					<p className="text-xs font-semibold text-muted-foreground line-clamp-1">{track.artist.name}</p>
 				</div>
 			</div>
 	)

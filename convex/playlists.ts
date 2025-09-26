@@ -1,6 +1,30 @@
 import {v} from "convex/values";
 import {mutation, query} from "./_generated/server";
 import {getAuthUserId} from "@convex-dev/auth/server";
+import {api} from "./_generated/api";
+import type {Id} from "./_generated/dataModel";
+import type {TrackFull} from "./tracks.ts";
+
+export type Playlist = {
+	_id: Id<"playlists">
+	_creationTime: number,
+	userId: Id<"users">,
+	name: string,
+	playlistPicUrl: string,
+}
+
+export type PlaylistTrack = {
+	_id: Id<"playlistsTracks">
+	_creationTime: number,
+	playlistId: Id<"playlists">,
+	trackId: Id<"tracks">,
+	order: number,
+}
+
+export type PlaylistTrackFull = {
+	track: TrackFull,
+} & PlaylistTrack
+
 
 export const get = query({
 	args: {id: v.id("playlists")},
@@ -45,13 +69,26 @@ export const addTrack = mutation({
 	}
 })
 
+
 export const getPlaylistTracks = query({
 	args: {playlistId: v.id("playlists")},
-	handler: async (ctx, args) => {
-		return await ctx.db
+	handler: async (ctx, args): Promise<Array<PlaylistTrackFull>> => {
+		const playlistTracks = await ctx.db
 				.query("playlistsTracks")
 				.withIndex("by_playlistId", (q) => q.eq("playlistId", args.playlistId))
+				.order("asc")
 				.collect();
+
+		const tracks = await Promise.all(
+				playlistTracks.map(pt =>
+						ctx.runQuery(api.tracks.get, {trackId: pt.trackId})
+				)
+		);
+
+		return playlistTracks.map((pt, i) => ({
+			...pt,
+			track: tracks[i]!,
+		}));
 	}
 });
 
