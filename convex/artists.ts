@@ -23,7 +23,6 @@ export const get = query({
 export const getArtistByCurrentUser = query({
 	handler: async (ctx) => {
 		const userId = await getAuthUserId(ctx);
-
 		if (!userId) throw new Error("Not authenticated");
 
 		const artist = await ctx.db.query("artists").withIndex("by_userId", (q) => q.eq("userId", userId)).unique();

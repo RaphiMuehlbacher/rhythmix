@@ -11,7 +11,7 @@ export default function SongCard({id, title, artist, image}: {
 	const playTrack = usePlayerStore(state => state.playTrack);
 
 	return (
-			<div className="flex flex-col p-[9px] rounded-md cursor-pointer hover:bg-neutral-800 group">
+			<div className="flex flex-col p-[9px] rounded-md cursor-pointer hover:bg-accent group">
 				<div className="relative">
 					<img width={300} height={300} className="rounded-lg w-full group" src={image} alt={title}/>
 					<button
@@ -24,7 +24,7 @@ export default function SongCard({id, title, artist, image}: {
 						</svg>
 					</button>
 				</div>
-				<p className="font-medium text-white line-clamp-2 mt-2">{title}</p>
+				<p className="font-medium text-foreground line-clamp-2 mt-2">{title}</p>
 				<p className="font-medium text-zinc-400 text-sm line-clamp-2">{artist}</p>
 			</div>
 	);

@@ -9,7 +9,7 @@ export default function MainContent() {
 		return <h1>Error</h1>
 	}
 
-	return <div className="bg-primary rounded-lg">
+	return <div className="bg-background rounded-lg">
 		<div
 				className={
 					'grid lg:grid-cols-[repeat(auto-fit,minmax(180px,1fr))] grid-rows-1 auto-rows-[0px] overflow-y-hidden h-min'

@@ -28,11 +28,12 @@ export default defineSchema({
 	playlists: defineTable({
 		name: v.string(),
 		userId: v.id("users"),
-	}),
+		playlistPicUrl: v.string(),
+	}).index("by_userId", ["userId"]),
 
 	playlistsTracks: defineTable({
 		playlistId: v.id("playlists"),
 		trackId: v.id("tracks"),
 		order: v.number(),
-	})
+	}).index("by_playlistId", ["playlistId"]).index("by_playlistId_trackId", ["playlistId", "trackId"]),
 });

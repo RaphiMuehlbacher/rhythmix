@@ -16,7 +16,7 @@ export default function SongsList() {
 	return (
 			<Card className="bg-neutral-900 border-neutral-800">
 				<CardHeader>
-					<CardTitle className="text-white">Your Songs</CardTitle>
+					<CardTitle className="text-foreground">Your Songs</CardTitle>
 					<p className="text-gray-400">Manage your uploaded tracks</p>
 				</CardHeader>
 				<CardContent>
