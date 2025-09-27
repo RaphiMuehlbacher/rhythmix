@@ -2,8 +2,8 @@ import {useMutation} from "convex/react";
 import {api} from "../../../convex/_generated/api";
 import {Edit2, Plus} from "lucide-react";
 import {
-	Dialog, DialogClose,
-	DialogContent, DialogFooter,
+	Dialog,
+	DialogContent,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger

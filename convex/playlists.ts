@@ -156,17 +156,19 @@ export const deletePlaylist = mutation({
 	}
 });
 
-export const renamePlaylist = mutation({
+export const update = mutation({
 	args: {
 		playlistId: v.id("playlists"),
-		newName: v.string()
+		newName: v.string(),
+		newPlaylistPicUrl: v.string(),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
 		if (!userId) throw new Error("Not authenticated");
 
 		await ctx.db.patch(args.playlistId, {
-			name: args.newName
+			name: args.newName,
+			playlistPicUrl: args.newPlaylistPicUrl
 		});
 	}
 });
