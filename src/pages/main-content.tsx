@@ -16,12 +16,8 @@ export default function MainContent() {
 				}
 		>
 			{tracks.slice(0, 10).map((track) => (
-					<SongCard
-							id={track._id}
-							title={track.title}
-							artist={track.artist}
-							image={track.coverUrl}
-							key={track._id}
+					<SongCard track={track} artist={track.artist}
+										key={track._id}
 					/>
 			))}
 		</div>

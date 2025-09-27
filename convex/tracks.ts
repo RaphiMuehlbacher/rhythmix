@@ -28,7 +28,7 @@ export const all = query({
 			const artist = await ctx.db.get(track.artistId);
 			return {
 				...track,
-				artist: artist?.name ?? "Unknown"
+				artist: artist!,
 			}
 		}))
 	},

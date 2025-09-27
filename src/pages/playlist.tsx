@@ -2,7 +2,7 @@ import {useParams} from "react-router";
 import {useMutation, useQuery} from "convex/react";
 import {api} from "../../convex/_generated/api";
 import type {Id} from "../../convex/_generated/dataModel";
-import {Clock, MoreHorizontal, Pencil, Play, Shuffle, Trash} from "lucide-react";
+import {Clock, MoreHorizontal, Pause, Pencil, Play, Shuffle, Trash} from "lucide-react";
 import {format, formatDistanceToNow, differenceInMonths, intervalToDuration} from 'date-fns';
 import {usePlayerStore} from "@/stores/player-store.ts";
 import {
@@ -19,12 +19,20 @@ import {
 } from "@/components/ui/alert-dialog.tsx";
 import EditPlaylistDialog from "@/components/playlist/edit-playlist-dialog";
 import {useState} from "react";
+import type {PlaylistTrackFull} from "../../convex/playlists.ts";
 
 export default function Playlist() {
 	const {playlistId} = useParams();
 	const [editDialogOpen, setEditDialogOpen] = useState(false);
 
 	const playPlaylist = usePlayerStore(state => state.playPlaylist);
+	const pause = usePlayerStore(state => state.pause);
+	const resume = usePlayerStore(state => state.resume);
+
+	const currentTrack = usePlayerStore(state => state.window.current);
+	const context = usePlayerStore(state => state.context);
+	const isPlaying = usePlayerStore(state => state.isPlaying);
+
 	const deletePlaylist = useMutation(api.playlists.deletePlaylist);
 
 	const user = useQuery(api.users.currentUser);
@@ -34,6 +42,7 @@ export default function Playlist() {
 
 	if (!user || !playlist || !playlistTracks) return <h1>Loading...</h1>
 
+	const correctPlaylist = context.type === "playlist" && playlist._id === context.id;
 	const playlistDuration = playlistTracks.reduce((acc, t) => acc + (t.track.duration), 0);
 
 	const formatTrackDuration = (ms: number) => {
@@ -80,6 +89,20 @@ export default function Playlist() {
 		return parts.join(' ');
 	}
 
+	const handlePlaylistClick = async (order?: number) => {
+		if (isPlaying && correctPlaylist) {
+			pause();
+		} else if (correctPlaylist) {
+			resume();
+		} else {
+			await playPlaylist(playlist._id, order);
+		}
+	}
+
+
+	const playlistTrackIsPlaying = (playlistTrack: PlaylistTrackFull) => {
+		return isPlaying && currentTrack?._id === playlistTrack.track._id && playlistTrack.playlistId === playlist._id;
+	}
 
 	return (
 			<>
@@ -90,25 +113,45 @@ export default function Playlist() {
 							<p className="text-6xl font-bold text-balance mb-6">{playlist.name}</p>
 							<div className="flex items-center gap-2 text-sm text-muted-foreground">
 								<span className="font-semibold text-foreground">{user.name}</span>
-								<span>•</span>
-								<span>{playlistTracks.length} songs</span>
-								<span>•</span>
-								<span>{formatPlaylistDuration(playlistDuration)}</span>
+								{playlistTracks.length > 0 &&
+									<div>
+										<span>•</span>
+										<span>{playlistTracks.length} songs</span>
+										<span>•</span>
+										<span>{formatPlaylistDuration(playlistDuration)}</span>
+									</div>
+								}
 							</div>
 						</div>
 					</div>
 
 					<div className="pt-7">
 						<div className="flex items-center gap-6">
-							<button onClick={() => playPlaylist(playlist._id)}
-											className="flex items-center justify-center rounded-full bg-green-500 size-12 cursor-pointer transition-transform transform hover:scale-[1.03] duration-75 "
+							<button
+									onClick={() => handlePlaylistClick()}
+									className=
+											"flex items-center justify-center rounded-full bg-green-500 size-12 p-2 transition-transform transform hover:scale-[1.03] duration-75"
 							>
-								<svg viewBox="0 0 16 16"
-										 className="size-6 transition-transform transform hover:scale-[1.03] duration-75">
-									<path
-											d="M2.7 1a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7H2.7zm8 0a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-2.6z"></path>
-								</svg>
+								{correctPlaylist && isPlaying ? (
+										<svg
+												viewBox="0 0 16 16"
+												className="size-6 transition-transform transform hover:scale-[1.03] duration-75"
+										>
+											<path
+													d="M2.7 1a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7H2.7zm8 0a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-2.6z"></path>
+										</svg>
+								) : (
+										<svg
+												viewBox="0 0 24 24"
+												className="size-6 transition-transform transform hover:scale-[1.03] duration-75"
+										>
+											<path
+													d="m7.05 3.606 13.49 7.788a.7.7 0 0 1 0 1.212L7.05 20.394A.7.7 0 0 1 6 19.788V4.212a.7.7 0 0 1 1.05-.606z"></path>
+										</svg>
+
+								)}
 							</button>
+
 							<Shuffle className="text-muted-foreground hover:text-foreground"/>
 							<AlertDialog>
 								<DropdownMenu>
@@ -164,16 +207,20 @@ export default function Playlist() {
 						</div>
 						<div className="mt-2">
 							{playlistTracks.map(playlistTrack => (
-									<div
-											key={playlistTrack._id}
-											className={`grid grid-cols-[16px_1fr_1fr_40px_40px] gap-4 px-4 py-2 hover:bg-muted/30 rounded-md group transition-colors`}
-									>
-										<div className="flex items-center justify-center text-muted-foreground">
+									<div key={playlistTrack._id}
+											 className="grid grid-cols-[16px_1fr_1fr_40px_40px] gap-4 px-4 py-2 hover:bg-muted/30 rounded-md group transition-colors">
 
-											<button className="cursor-pointer"
-															onClick={() => playPlaylist(playlistTrack.playlistId, playlistTrack.order)}>
-												<span className="group-hover:hidden text-sm font-semibold">{playlistTrack.order + 1}</span>
-												<Play className="w-4 h-4 hidden group-hover:block text-foreground fill"/>
+										<div className="flex items-center justify-center text-muted-foreground">
+											<button
+													className="cursor-pointer"
+													onClick={() => handlePlaylistClick(playlistTrack.order)}
+											>
+												<span
+														className={`group-hover:hidden text-sm font-semibold ${currentTrack?._id === playlistTrack.track._id && playlistTrack.playlistId === playlist._id ? 'text-green-500' : ''}`}>{playlistTrack.order + 1}</span>
+												<span className="hidden group-hover:block text-foreground">
+												{playlistTrackIsPlaying(playlistTrack) ?
+														<Pause size={18}/> : <Play size={18}/>}
+													</span>
 											</button>
 										</div>
 
@@ -181,7 +228,7 @@ export default function Playlist() {
 											<img src={playlistTrack.track.coverUrl} alt="" className="size-11 rounded"/>
 											<div className="min-w-0">
 												<div
-														className={`font-medium truncate`}
+														className={`font-medium truncate ${currentTrack?._id === playlistTrack.track._id && playlistTrack.playlistId === playlist._id ? 'text-green-500' : ''}`}
 												>
 													{playlistTrack.track.title}
 												</div>
