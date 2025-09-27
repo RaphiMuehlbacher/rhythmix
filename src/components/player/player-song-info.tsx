@@ -1,7 +1,7 @@
 import {usePlayerStore} from "@/stores/player-store.ts";
 
 export default function PlayerSongInfo() {
-	const track = usePlayerStore(store => store.track);
+	const track = usePlayerStore(store => store.window.current);
 
 	if (!track) {
 		return <h1>Select a song</h1>;

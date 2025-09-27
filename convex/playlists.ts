@@ -71,6 +71,30 @@ export const addTrack = mutation({
 
 
 export const getPlaylistTracks = query({
+	args: {playlistId: v.id("playlists"), offset: v.number(), limit: v.number()},
+	handler: async (ctx, args): Promise<Array<PlaylistTrackFull>> => {
+		const allPlaylistTracks = await ctx.db
+				.query("playlistsTracks")
+				.withIndex("by_playlistId", (q) => q.eq("playlistId", args.playlistId))
+				.order("asc")
+				.collect();
+
+		const playlistTracks = allPlaylistTracks.slice(args.offset, args.offset + args.limit);
+
+		const tracks = await Promise.all(
+				playlistTracks.map(pt =>
+						ctx.runQuery(api.tracks.get, {trackId: pt.trackId})
+				)
+		);
+
+		return playlistTracks.map((pt, i) => ({
+			...pt,
+			track: tracks[i],
+		}));
+	}
+});
+
+export const getAllPlaylistTracks = query({
 	args: {playlistId: v.id("playlists")},
 	handler: async (ctx, args): Promise<Array<PlaylistTrackFull>> => {
 		const playlistTracks = await ctx.db
@@ -87,7 +111,7 @@ export const getPlaylistTracks = query({
 
 		return playlistTracks.map((pt, i) => ({
 			...pt,
-			track: tracks[i]!,
+			track: tracks[i],
 		}));
 	}
 });

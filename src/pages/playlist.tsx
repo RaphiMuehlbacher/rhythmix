@@ -9,11 +9,11 @@ import {usePlayerStore} from "@/stores/player-store.ts";
 export default function Playlist() {
 	const {playlistId} = useParams();
 
-	const playTrack = usePlayerStore(state => state.playTrack);
+	const playPlaylist = usePlayerStore(state => state.playPlaylist);
 
 	const user = useQuery(api.users.currentUser);
 	const playlist = useQuery(api.playlists.get, {id: playlistId as Id<"playlists">});
-	const playlistTracks = useQuery(api.playlists.getPlaylistTracks, playlist ? {playlistId: playlist._id} : "skip");
+	const playlistTracks = useQuery(api.playlists.getAllPlaylistTracks, playlist ? {playlistId: playlist._id} : "skip");
 
 
 	if (!user || !playlist || !playlistTracks) return <h1>Loading...</h1>
@@ -83,8 +83,8 @@ export default function Playlist() {
 
 				<div className="pt-7">
 					<div className="flex items-center gap-6">
-						<button
-								className="flex items-center justify-center rounded-full bg-green-500 size-12 cursor-pointer transition-transform transform hover:scale-[1.03] duration-75 "
+						<button onClick={() => playPlaylist(playlist._id)}
+										className="flex items-center justify-center rounded-full bg-green-500 size-12 cursor-pointer transition-transform transform hover:scale-[1.03] duration-75 "
 						>
 							<svg viewBox="0 0 16 16" className="size-6 transition-transform transform hover:scale-[1.03] duration-75">
 								<path
@@ -113,7 +113,8 @@ export default function Playlist() {
 								>
 									<div className="flex items-center justify-center text-muted-foreground">
 
-										<button className="cursor-pointer" onClick={() => playTrack(playlistTrack.track._id)}>
+										<button className="cursor-pointer"
+														onClick={() => playPlaylist(playlistTrack.playlistId, playlistTrack.order)}>
 											<span className="group-hover:hidden text-sm font-semibold">{playlistTrack.order + 1}</span>
 											<Play className="w-4 h-4 hidden group-hover:block text-foreground fill"/>
 										</button>

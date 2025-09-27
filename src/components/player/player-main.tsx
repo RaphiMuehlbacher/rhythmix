@@ -4,6 +4,8 @@ import {usePlayerStore} from "@/stores/player-store.ts";
 export default function PlayerMain() {
 	const isPlaying = usePlayerStore(state => state.isPlaying);
 	const togglePlay = usePlayerStore(state => state.togglePlay);
+	const nextTrack = usePlayerStore(state => state.nextTrack);
+	const previousTrack = usePlayerStore(state => state.previousTrack);
 
 	const shuffle = false;
 	const repeatMode = 0;
@@ -38,6 +40,7 @@ export default function PlayerMain() {
 					</button>
 
 					<button
+							onClick={previousTrack}
 							className="cursor-pointer"
 					>
 						<svg
@@ -74,6 +77,7 @@ export default function PlayerMain() {
 					</button>
 
 					<button
+							onClick={nextTrack}
 							className="cursor-pointer"
 					>
 						<svg
