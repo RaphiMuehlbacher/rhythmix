@@ -118,22 +118,13 @@ export const getAllPlaylistTracks = query({
 
 export const removeTrack = mutation({
 	args: {
-		playlistId: v.id("playlists"),
-		trackId: v.id("tracks")
+		playlistTrackId: v.id("playlistsTracks"),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
 		if (!userId) throw new Error("Not authenticated");
 
-		const playlistTrack = await ctx.db
-				.query("playlistsTracks")
-				.withIndex("by_playlistId_trackId", (q) =>
-						q.eq("playlistId", args.playlistId).eq("trackId", args.trackId))
-				.first();
-
-		if (playlistTrack) {
-			await ctx.db.delete(playlistTrack._id);
-		}
+		await ctx.db.delete(args.playlistTrackId);
 	}
 });
 

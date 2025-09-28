@@ -2,8 +2,8 @@ import {useParams} from "react-router";
 import {useMutation, useQuery} from "convex/react";
 import {api} from "../../convex/_generated/api";
 import type {Id} from "../../convex/_generated/dataModel";
-import {Clock, MoreHorizontal, Pause, Pencil, Play, Shuffle, Trash} from "lucide-react";
-import {format, formatDistanceToNow, differenceInMonths, intervalToDuration} from 'date-fns';
+import {Clock, MoreHorizontal, Pencil, Shuffle, Trash} from "lucide-react";
+import {intervalToDuration} from 'date-fns';
 import {usePlayerStore} from "@/stores/player-store.ts";
 import {
 	DropdownMenu,
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog.tsx";
 import EditPlaylistDialog from "@/components/playlist/edit-playlist-dialog";
 import {useState} from "react";
-import type {PlaylistTrackFull} from "../../convex/playlists.ts";
+import PlaylistTrack from "@/components/playlist/playlist-track.tsx";
 
 export default function Playlist() {
 	const {playlistId} = useParams();
@@ -29,7 +29,6 @@ export default function Playlist() {
 	const pause = usePlayerStore(state => state.pause);
 	const resume = usePlayerStore(state => state.resume);
 
-	const currentTrack = usePlayerStore(state => state.window.current);
 	const context = usePlayerStore(state => state.context);
 	const isPlaying = usePlayerStore(state => state.isPlaying);
 
@@ -45,33 +44,6 @@ export default function Playlist() {
 	const correctPlaylist = context.type === "playlist" && playlist._id === context.id;
 	const playlistDuration = playlistTracks.reduce((acc, t) => acc + (t.track.duration), 0);
 
-	const formatTrackDuration = (ms: number) => {
-		const totalSeconds = Math.floor(ms / 1000);
-		const hours = Math.floor(totalSeconds / 3600);
-		const minutes = Math.floor((totalSeconds % 3600) / 60);
-		const seconds = totalSeconds % 60;
-
-		const paddedSeconds = seconds.toString().padStart(2, '0');
-
-		if (hours > 0) {
-			const paddedMinutesForHour = minutes.toString().padStart(2, '0');
-			return `${hours}:${paddedMinutesForHour}:${paddedSeconds}`;
-		} else {
-			return `${minutes}:${paddedSeconds}`;
-		}
-	}
-
-	const formatUploadTime = (uploadTime: number) => {
-		const now = new Date();
-		const date = new Date(uploadTime);
-
-		if (differenceInMonths(now, date) >= 1) {
-			return format(date, 'MMM dd, yyyy');
-		}
-
-
-		return formatDistanceToNow(date, {addSuffix: true});
-	}
 
 	const formatPlaylistDuration = (ms: number) => {
 		const duration = intervalToDuration({
@@ -89,19 +61,14 @@ export default function Playlist() {
 		return parts.join(' ');
 	}
 
-	const handlePlaylistClick = async (order?: number) => {
+	const handlePlaylistClick = async () => {
 		if (isPlaying && correctPlaylist) {
 			pause();
 		} else if (correctPlaylist) {
 			resume();
 		} else {
-			await playPlaylist(playlist._id, order);
+			await playPlaylist(playlist._id);
 		}
-	}
-
-
-	const playlistTrackIsPlaying = (playlistTrack: PlaylistTrackFull) => {
-		return isPlaying && currentTrack?._id === playlistTrack.track._id && playlistTrack.playlistId === playlist._id;
 	}
 
 	return (
@@ -114,12 +81,12 @@ export default function Playlist() {
 							<div className="flex items-center gap-2 text-sm text-muted-foreground">
 								<span className="font-semibold text-foreground">{user.name}</span>
 								{playlistTracks.length > 0 &&
-									<div>
+									<>
 										<span>•</span>
 										<span>{playlistTracks.length} songs</span>
 										<span>•</span>
 										<span>{formatPlaylistDuration(playlistDuration)}</span>
-									</div>
+									</>
 								}
 							</div>
 						</div>
@@ -155,12 +122,12 @@ export default function Playlist() {
 							<Shuffle className="text-muted-foreground hover:text-foreground"/>
 							<AlertDialog>
 								<DropdownMenu>
-									<DropdownMenuTrigger>
+									<DropdownMenuTrigger asChild>
 										<MoreHorizontal className="text-muted-foreground hover:text-foreground"/>
 									</DropdownMenuTrigger>
 
 									<DropdownMenuContent className="w-40 font-semibold">
-										<DropdownMenuItem asChild>
+										<DropdownMenuItem>
 											<AlertDialogTrigger className="w-full">
 												<div className="flex items-center gap-2 ">
 													<Trash size={15} className="text-neutral-400"/>
@@ -207,48 +174,7 @@ export default function Playlist() {
 						</div>
 						<div className="mt-2">
 							{playlistTracks.map(playlistTrack => (
-									<div key={playlistTrack._id}
-											 className="grid grid-cols-[16px_1fr_1fr_40px_40px] gap-4 px-4 py-2 hover:bg-muted/30 rounded-md group transition-colors">
-
-										<div className="flex items-center justify-center text-muted-foreground">
-											<button
-													className="cursor-pointer"
-													onClick={() => handlePlaylistClick(playlistTrack.order)}
-											>
-												<span
-														className={`group-hover:hidden text-sm font-semibold ${currentTrack?._id === playlistTrack.track._id && playlistTrack.playlistId === playlist._id ? 'text-green-500' : ''}`}>{playlistTrack.order + 1}</span>
-												<span className="hidden group-hover:block text-foreground">
-												{playlistTrackIsPlaying(playlistTrack) ?
-														<Pause size={18}/> : <Play size={18}/>}
-													</span>
-											</button>
-										</div>
-
-										<div className="flex items-center min-w-0 gap-3">
-											<img src={playlistTrack.track.coverUrl} alt="" className="size-11 rounded"/>
-											<div className="min-w-0">
-												<div
-														className={`font-medium truncate ${currentTrack?._id === playlistTrack.track._id && playlistTrack.playlistId === playlist._id ? 'text-green-500' : ''}`}
-												>
-													{playlistTrack.track.title}
-												</div>
-												<div className="text-sm text-muted-foreground truncate">{playlistTrack.track.artist.name}</div>
-											</div>
-										</div>
-
-										<div
-												className="hidden md:flex items-center text-muted-foreground text-sm">{formatUploadTime(playlistTrack._creationTime)}
-										</div>
-
-										<div
-												className="flex items-center justify-center text-muted-foreground text-sm">{formatTrackDuration(playlistTrack.track.duration)}
-										</div>
-										<div className="hidden group-hover:flex items-center justify-center">
-											<button className="cursor-pointer">
-												<MoreHorizontal size={22}/>
-											</button>
-										</div>
-									</div>
+									<PlaylistTrack playlistTrack={playlistTrack} playlistId={playlist._id} key={playlistTrack._id}/>
 							))}
 						</div>
 					</div>
