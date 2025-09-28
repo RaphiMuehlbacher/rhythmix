@@ -70,7 +70,7 @@ export default function PlaylistTrack({playlistTrack, playlistId}: {
 
 	return (
 			<div
-					className="grid grid-cols-[16px_1fr_1fr_40px_40px] gap-4 px-4 py-2 hover:bg-muted/30 rounded-md group transition-colors">
+					className="grid grid-cols-[16px_1fr_1fr_40px_40px] gap-4 px-4 py-2 hover:bg-muted/50 rounded-md group transition-colors">
 
 				<div className="flex items-center justify-center text-muted-foreground">
 					<button
