@@ -3,7 +3,8 @@ from pathlib import Path
 import shutil
 import subprocess
 import shutil as pyshutil
-from mutagen import File as MutagenFile
+from mutagen import File
+import uuid
 
 app = FastAPI()
 
@@ -11,10 +12,10 @@ SONGS_DIR = Path("/var/www/html/rhythmix/audio_files")  # HLS output base
 UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
 COVER_DIR = Path("/var/www/html/rhythmix/covers")  # cover images
 PROFILE_IMG_DIR = Path("/var/www/html/rhythmix/profile-images")  # profile images
+PLAYLIST_IMG_DIR = Path("/var/www/html/rhythmix/playlist-images")  # profile images
 
 ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
-ALLOWED_COVER_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
-ALLOWED_PROFILE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+ALLOWED_IMG_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
 for d in (SONGS_DIR, UPLOAD_DIR, COVER_DIR, PROFILE_IMG_DIR):
     d.mkdir(parents=True, exist_ok=True)
@@ -43,10 +44,10 @@ async def upload_audio(
             status_code=400,
             detail=f"Only files with extensions {sorted(ALLOWED_AUDIO_EXTENSIONS)} are allowed"
         )
-    if ext_cover not in ALLOWED_COVER_EXTENSIONS:
+    if ext_cover not in ALLOWED_IMG_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"Only files with extensions {sorted(ALLOWED_COVER_EXTENSIONS)} are allowed"
+            detail=f"Only files with extensions {sorted(ALLOWED_IMG_EXTENSIONS)} are allowed"
         )
 
     # Save cover
@@ -119,10 +120,10 @@ async def upload_profile_picture(
 ):
     # Validate extension
     ext = Path(file.filename).suffix.lower()
-    if ext not in ALLOWED_PROFILE_EXTENSIONS:
+    if ext not in ALLOWED_IMG_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"Only files with extensions {sorted(ALLOWED_PROFILE_EXTENSIONS)} are allowed"
+            detail=f"Only files with extensions {sorted(ALLOWED_IMG_EXTENSIONS)} are allowed"
         )
 
     filename = f"{artist_id}{ext}"
@@ -134,4 +135,27 @@ async def upload_profile_picture(
         "status": "success",
         "artistId": artist_id,
         "filename": str(filename),
+    }
+
+
+@app.post("/upload-playlist-cover")
+async def upload_playlist_cover(file: UploadFile = File(...)):
+    ext = Path(file.filename).suffix.lower()
+    if ext not in ALLOWED_IMG_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only files with extensions {sorted(ALLOWED_IMG_EXTENSIONS)} are allowed"
+        )
+
+    filename = f"{uuid.uuid4()}{ext}"
+    img_path = PLAYLIST_IMG_DIR / filename
+    PLAYLIST_IMG_DIR.mkdir(parents=True, exist_ok=True)
+
+    with open(img_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {
+        "status": "success",
+        "filename": str(filename),
+        "filePath": str(img_path),
     }
