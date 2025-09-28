@@ -29,7 +29,7 @@ export default function SidebarPlaylist({playlist}: { playlist: PlaylistFull }) 
 			<div
 					className={`
 							relative flex items-center group h-[70px] rounded-lg gap-1 hover:bg-muted/50
-							${isCurrentPlaylist && 'bg-muted/40 hover:bg-muted-70'}
+							${isCurrentPlaylist && 'bg-muted/40 hover:bg-muted/70'}
 					`}
 			>
 				<div className="relative flex-shrink-0"
@@ -55,7 +55,7 @@ export default function SidebarPlaylist({playlist}: { playlist: PlaylistFull }) 
 					</button>
 				</div>
 
-				<div className="flex flex-col flex-grow cursor-pointer" onClick={() => navigate(`playlists/${playlist._id}`)}>
+				<div className="flex flex-col flex-grow cursor-pointer" onClick={() => navigate(`/playlists/${playlist._id}`)}>
 					<span className={`font-medium line-clamp-1 ${isCurrentPlaylist ? 'text-green-500' : ''}`}>
 						{playlist.name}
 					</span>
