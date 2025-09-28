@@ -182,8 +182,21 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 					isPlaying: true
 				});
 
-				if (window.next.length <= 3 && context.id && convexClient) {
-					console.log("Fetching next one")
+				if (window.next.length <= 3 && context.type === "playlist" && context.id && convexClient) {
+					const nextChunk = await convexClient.query(api.playlists.getPlaylistTracks, {
+						playlistId: context.id,
+						offset: currentIndex + window.next.length + 1,
+						limit: 10
+					});
+
+					if (nextChunk.length > 0) {
+						set(state => ({
+							window: {
+								...state.window,
+								next: [...state.window.next, ...nextChunk.map(pt => pt.track)]
+							}
+						}));
+					}
 				}
 			} else {
 				get().pause();

@@ -52,7 +52,7 @@ export default function CreatePlaylistButton() {
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		let playlistPicUrl = null;
 		if (!file) {
-			playlistPicUrl = "https://rhythmix.redstphillip.uk/rhythmix/covers/ks75ztf2v9ypreryehdja559mx7r4pt3.jpeg";
+			playlistPicUrl = `${import.meta.env.VITE_API_URL}/ks75ztf2v9ypreryehdja559mx7r4pt3.jpeg`;
 		} else {
 			const formData = new FormData();
 			formData.append("file", file);
