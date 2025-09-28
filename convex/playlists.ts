@@ -4,6 +4,7 @@ import {getAuthUserId} from "@convex-dev/auth/server";
 import {api} from "./_generated/api";
 import type {Id} from "./_generated/dataModel";
 import type {TrackFull} from "./tracks.ts";
+import type {User} from "./users.ts";
 
 export type Playlist = {
 	_id: Id<"playlists">
@@ -12,6 +13,10 @@ export type Playlist = {
 	name: string,
 	playlistPicUrl: string,
 }
+
+export type PlaylistFull = {
+	user: User
+} & Playlist
 
 export type PlaylistTrack = {
 	_id: Id<"playlistsTracks">
@@ -34,11 +39,15 @@ export const get = query({
 })
 
 export const getAllByUser = query({
-	handler: async (ctx) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
+	handler: async (ctx): Promise<PlaylistFull[]> => {
+		const user = await ctx.runQuery(api.users.currentUser);
+		if (!user) throw new Error("Not authenticated");
 
-		return ctx.db.query("playlists").withIndex("by_userId", (q) => q.eq("userId", userId)).collect()
+		const playlists = await ctx.db.query("playlists").withIndex("by_userId", (q) => q.eq("userId", user._id)).collect();
+		return playlists.map(playlist => ({
+			user: user,
+			...playlist,
+		}));
 	}
 })
 

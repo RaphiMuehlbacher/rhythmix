@@ -1,5 +1,5 @@
 import {Outlet} from "react-router";
-import Sidebar from "@/components/sidebar.tsx";
+import Sidebar from "@/components/sidebar/sidebar.tsx";
 import Player from "@/components/player/player.tsx";
 
 export function MainLayout() {

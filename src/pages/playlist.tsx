@@ -61,7 +61,7 @@ export default function Playlist() {
 		return parts.join(' ');
 	}
 
-	const handlePlaylistClick = async () => {
+	const handlePlay = async () => {
 		if (isPlaying && correctPlaylist) {
 			pause();
 		} else if (correctPlaylist) {
@@ -95,7 +95,7 @@ export default function Playlist() {
 					<div className="pt-7">
 						<div className="flex items-center gap-6">
 							<button
-									onClick={() => handlePlaylistClick()}
+									onClick={() => handlePlay()}
 									className=
 											"flex items-center justify-center rounded-full bg-green-500 size-12 p-2 transition-transform transform hover:scale-[1.03] duration-75"
 							>
