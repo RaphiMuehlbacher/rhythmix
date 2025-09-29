@@ -12,6 +12,7 @@ jobs:
     env:
       VITE_CONVEX_URL: ${{ secrets.PROD_CONVEX_URL }}
       VITE_AUDIO_URL: ${{ secrets.PROD_AUDIO_URL }}
+      VITE_API_URL: ${{ secrets.PROD_API_URL }}
 
     steps:
       - name: Checkout code
