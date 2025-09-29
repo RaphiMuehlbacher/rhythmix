@@ -3,25 +3,41 @@ from pathlib import Path
 import shutil
 import subprocess
 import shutil as pyshutil
-from mutagen import File
+from mutagen import File as MutagenFile
 import uuid
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-SONGS_DIR = Path("/var/www/html/rhythmix/audio_files")  # HLS output base
+origins = [
+    "https://rhythmix.redstphillip.uk",  # your frontend domain
+    "http://localhost:5173",            # local dev
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Directories
+SONGS_DIR = Path("/var/www/html/rhythmix/audio_files")   # HLS output base
 UPLOAD_DIR = Path("/home/raspi1/rhythmix/audio_files_tmp")  # temporary upload folder
-COVER_DIR = Path("/var/www/html/rhythmix/covers")  # cover images
-PROFILE_IMG_DIR = Path("/var/www/html/rhythmix/profile-images")  # profile images
-PLAYLIST_IMG_DIR = Path("/var/www/html/rhythmix/playlist-images")  # profile images
+COVER_DIR = Path("/var/www/html/rhythmix/covers")       # cover images
+PROFILE_IMG_DIR = Path("/var/www/html/rhythmix/profile-images")
+PLAYLIST_IMG_DIR = Path("/var/www/html/rhythmix/playlist-images")
 
 ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".m4a"}
 ALLOWED_IMG_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
-for d in (SONGS_DIR, UPLOAD_DIR, COVER_DIR, PROFILE_IMG_DIR):
+for d in (SONGS_DIR, UPLOAD_DIR, COVER_DIR, PROFILE_IMG_DIR, PLAYLIST_IMG_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
 
 def get_audio_duration(path: Path) -> int:
+    """Return duration in ms using Mutagen."""
     try:
         audio = MutagenFile(path)
         if audio is None or not audio.info:
@@ -33,9 +49,9 @@ def get_audio_duration(path: Path) -> int:
 
 @app.post("/upload-song")
 async def upload_audio(
-        song_id: str = Form(...),
-        file: UploadFile = File(...),
-        cover: UploadFile = File(...),
+    song_id: str = Form(...),
+    file: UploadFile = File(...),
+    cover: UploadFile = File(...),
 ):
     ext_audio = Path(file.filename).suffix.lower()
     ext_cover = Path(cover.filename).suffix.lower()
@@ -60,11 +76,11 @@ async def upload_audio(
     with open(tmp_file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # 🔹 Extract duration in ms BEFORE transcoding
+    # Extract duration in ms BEFORE transcoding
     duration_ms = get_audio_duration(tmp_file_path)
 
     # Prepare per-song output dir and paths
-    ID_SONG_DIR = SONGS_DIR / f"{song_id}"
+    ID_SONG_DIR = SONGS_DIR / song_id
     ID_SONG_DIR.mkdir(parents=True, exist_ok=True)
     hls_output = ID_SONG_DIR / "output.m3u8"
     segment_pattern = ID_SONG_DIR / "segment_%03d.m4s"
@@ -115,8 +131,8 @@ async def upload_audio(
 
 @app.post("/upload-profile-picture")
 async def upload_profile_picture(
-        artist_id: str = Form(...),
-        file: UploadFile = File(...),
+    artist_id: str = Form(...),
+    file: UploadFile = File(...),
 ):
     # Validate extension
     ext = Path(file.filename).suffix.lower()
@@ -128,7 +144,6 @@ async def upload_profile_picture(
 
     filename = f"{artist_id}{ext}"
     profile_path = PROFILE_IMG_DIR / filename
-    print(profile_path)
     with open(profile_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     return {
@@ -149,7 +164,6 @@ async def upload_playlist_cover(file: UploadFile = File(...)):
 
     filename = f"{uuid.uuid4()}{ext}"
     img_path = PLAYLIST_IMG_DIR / filename
-    PLAYLIST_IMG_DIR.mkdir(parents=True, exist_ok=True)
 
     with open(img_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
