@@ -135,9 +135,9 @@ export const uploadSong = action({
 		} = await res.json();
 
 		const mediaSongId = data.trackId;
-		const audioUrl = `${import.meta.env.VITE_DATA_URL}/audio_files/${mediaSongId}/output.m3u8`;
+		const audioUrl = `rhythmix.redstphillip.uk/rhythmix/audio_files/${mediaSongId}/output.m3u8`;
 		const coverFilename = data.coverPath.split("/").pop() ?? "cover.webp";
-		const coverUrl = `${import.meta.env.VITE_DATA_URL}/covers/${coverFilename}`;
+		const coverUrl = `rhythmix.redstphillip.uk/rhythmix/covers/${coverFilename}`;
 
 		await ctx.runMutation(api.artists.updateSongAfterUpload, {
 			trackId,
@@ -217,7 +217,7 @@ export const uploadArtistProfilePic = action({
 			filename: string;
 		} = await res.json();
 
-		const profilePicUrl = `${import.meta.env.VITE_DATA_URL}/profile-images/${data.filename}`;
+		const profilePicUrl = `rhythmix.redstphillip.uk/rhythmix/profile-images/${data.filename}`;
 		await ctx.runMutation(api.artists.updateArtistProfilePic, {profilePicUrl});
 		return {profilePicUrl};
 	},
