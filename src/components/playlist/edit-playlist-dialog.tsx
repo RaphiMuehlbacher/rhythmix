@@ -78,7 +78,7 @@ export default function EditPlaylistDialog({
 
 			if (!res.ok) throw new Error("Upload failed");
 			const data = await res.json();
-			playlistPicUrl = "rhythmix.redstphillip.uk/rhythmix//playlist-images/" + data.filename;
+			playlistPicUrl = "https://rhythmix.redstphillip.uk/rhythmix//playlist-images/" + data.filename;
 		}
 
 		await updatePlaylist({
