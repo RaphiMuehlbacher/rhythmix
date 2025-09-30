@@ -10,8 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 origins = [
-    "https://rhythmix.redstphillip.uk",  # your frontend domain
-    "http://localhost:5173",            # local dev
+    "https://rhythmix.redstphillip.uk",  # frontend domain
+    # "http://localhost:5173",            # local dev
 ]
 
 app.add_middleware(
