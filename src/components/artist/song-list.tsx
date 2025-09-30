@@ -7,10 +7,14 @@ import {api} from "../../../convex/_generated/api"
 export default function SongsList() {
 	const artist = useQuery(api.artists.getArtistByCurrentUser);
 
-	const tracks = useQuery(api.tracks.byArtist, artist ? {artistId: artist.id} : "skip");
+	const tracks = useQuery(api.tracks.byArtist, artist ? {artistId: artist._id} : "skip");
 
-	if (!artist || !tracks) {
+	if (!artist) {
 		return <h1>Loading...</h1>
+	}
+
+	if (!tracks) {
+		return <h1>Loading tracks...</h1>
 	}
 
 	return (
