@@ -27,12 +27,11 @@ export default function SongCard({track, artist}: { track: Track, artist: Artist
 			<div className="flex flex-col p-[9px] rounded-md cursor-pointer hover:bg-neutral-800 group">
 				<div className="relative">
 					<img
-							width={300}
-							height={300}
-							src={track.coverUrl}
-							alt={track.title}
-							className="w-full rounded-lg group"
-					/>
+            src={track.coverUrl}
+            alt={track.title}
+            className="w-[200px] h-[200px] rounded-lg object-cover"
+          />
+
 					<button
 							onClick={handleClick}
 							className={cn(
