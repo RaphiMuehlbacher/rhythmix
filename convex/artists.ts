@@ -114,10 +114,10 @@ export const uploadSong = action({
 		});
 		formData.append("cover", coverBlob, args.imageFilename ?? "cover.webp");
 
-		const res = await fetch("https://api-rhythmix.redstphillip.uk/upload-song", {
-			method: "POST",
-			body: formData,
-		});
+		const res = await fetch(`${import.meta.env.VITE_API_URL}/upload-song`, {
+      method: "POST",
+      body: formData,
+    });
 
 		if (!res.ok) {
 			const errText = await res.text().catch(() => "");
@@ -135,9 +135,9 @@ export const uploadSong = action({
 		} = await res.json();
 
 		const mediaSongId = data.trackId;
-		const audioUrl = `https://rhythmix.redstphillip.uk/rhythmix/audio_files/${mediaSongId}/output.m3u8`;
+		const audioUrl = `${import.meta.env.VITE_DATA_URL}/audio_files/${mediaSongId}/output.m3u8`;
 		const coverFilename = data.coverPath.split("/").pop() ?? "cover.webp";
-		const coverUrl = `https://rhythmix.redstphillip.uk/rhythmix/covers/${coverFilename}`;
+		const coverUrl = `${import.meta.env.VITE_DATA_URL}/covers/${coverFilename}`;
 
 		await ctx.runMutation(api.artists.updateSongAfterUpload, {
 			trackId,
@@ -199,7 +199,7 @@ export const uploadArtistProfilePic = action({
 		});
 		formData.append("file", imageBlob, args.imageFilename ?? "profile.png");
 
-		const res = await fetch("https://api-rhythmix.redstphillip.uk/upload-profile-picture", {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/upload-profile-picture`, {
 			method: "POST",
 			body: formData,
 		});
@@ -217,9 +217,8 @@ export const uploadArtistProfilePic = action({
 			filename: string;
 		} = await res.json();
 
-		const profilePicUrl = `https://rhythmix.redstphillip.uk/rhythmix/profile-images/${data.filename}`;
+		const profilePicUrl = `${import.meta.env.VITE_DATA_URL}/profile-images/${data.filename}`;
 		await ctx.runMutation(api.artists.updateArtistProfilePic, {profilePicUrl});
-
 		return {profilePicUrl};
 	},
 });

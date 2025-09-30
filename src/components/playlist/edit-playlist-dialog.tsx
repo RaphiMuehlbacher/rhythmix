@@ -78,7 +78,7 @@ export default function EditPlaylistDialog({
 
 			if (!res.ok) throw new Error("Upload failed");
 			const data = await res.json();
-			playlistPicUrl = data.filePath;
+			playlistPicUrl = import.meta.env.VITE_DATA_URL + "/playlist-images/" + data.filename;
 		}
 
 		await updatePlaylist({
