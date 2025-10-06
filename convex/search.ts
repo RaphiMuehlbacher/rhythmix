@@ -1,4 +1,4 @@
-import { action, internalQuery } from "./_generated/server";
+import { action, internalQuery, query } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import Fuse from "fuse.js";
@@ -56,5 +56,39 @@ export const searchArtists = internalQuery({
       .query("artists")
       .withSearchIndex("search_body", (q) => q.search("name", args.searchTerm))
       .take(10);
+  },
+});
+
+// New query for getting full search results with artist info
+export const getSearchResults = query({
+  args: { searchTerm: v.string() },
+  handler: async (ctx, args) => {
+    // Search tracks
+    const tracks = await ctx.db
+      .query("tracks")
+      .withSearchIndex("search_body", (q) => q.search("title", args.searchTerm))
+      .take(20);
+
+    // Get full track info with artists
+    const tracksWithArtists = await Promise.all(
+      tracks.map(async (track) => {
+        const artist = await ctx.db.get(track.artistId);
+        return {
+          ...track,
+          artist: artist!,
+        };
+      })
+    );
+
+    // Search artists
+    const artists = await ctx.db
+      .query("artists")
+      .withSearchIndex("search_body", (q) => q.search("name", args.searchTerm))
+      .take(20);
+
+    return {
+      tracks: tracksWithArtists,
+      artists,
+    };
   },
 });

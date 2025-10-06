@@ -23,6 +23,12 @@ export const get = query({
 	},
 });
 
+export const all = query({
+	args: {},
+	handler: async (ctx) => {
+		return await ctx.db.query("artists").collect();
+	},
+});
 
 export const getArtistByCurrentUser = query({
 	handler: async (ctx) => {
