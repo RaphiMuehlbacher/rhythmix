@@ -1,11 +1,12 @@
 import {usePlayerStore} from "@/stores/player-store.ts";
 
 export default function PlayerSongInfo() {
-	const track = usePlayerStore(store => store.window.current);
+	const current = usePlayerStore(store => store.window.current);
 
-	if (!track) {
+	if (!current) {
 		return <h1>Select a song</h1>;
 	}
+	const track = "track" in current ? current.track : current;
 
 	return (
 			<div className="flex items-center justify-start gap-3">
