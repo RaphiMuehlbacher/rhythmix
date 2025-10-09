@@ -4,6 +4,7 @@ import Hls from "hls.js";
 import {type ConvexReactClient} from "convex/react";
 import {api} from "../../convex/_generated/api";
 import type {TrackFull} from "../../convex/tracks.ts";
+import type {PlaylistTrackFull} from "../../convex/playlists.ts";
 
 type PlayerStore = {
 	audio: HTMLAudioElement,
@@ -13,15 +14,16 @@ type PlayerStore = {
 	setConvexClient: (c: ConvexReactClient) => void,
 
 	isPlaying: boolean;
+
 	context: {
 		type: "single" | "playlist",
 		id: Id<"playlists"> | null
 	}
 
 	window: {
-		previous: TrackFull[],
-		current: TrackFull | null,
-		next: TrackFull[],
+		previous: (PlaylistTrackFull | TrackFull)[],
+		current: PlaylistTrackFull | TrackFull | null,
+		next: (PlaylistTrackFull | TrackFull)[],
 	},
 
 	currentIndex: number,
@@ -142,8 +144,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 			set({
 				window: {
 					previous: [],
-					current: chunk[0].track,
-					next: chunk.slice(1).map(playlistTrack => playlistTrack.track),
+					current: chunk[0],
+					next: chunk.slice(1),
 				},
 				context: {
 					type: "playlist",
@@ -161,18 +163,25 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 				const current = window.current!;
 				const next = window.next[0];
 
+				let audioUrl = "";
+				if ("audioUrl" in next) {
+					audioUrl = next.audioUrl;
+				} else if ("track" in next) {
+					audioUrl = next.track.audioUrl;
+				}
+
 				if (!get().hls) {
 					const hlsInstance = new Hls({startFragPrefetch: true, maxBufferLength: 30});
 					hlsInstance.attachMedia(audio);
 					set({hls: hlsInstance});
 				}
 
-				get().hls?.loadSource(next.audioUrl);
+				get().hls?.loadSource(audioUrl);
 				await audio.play();
 
 				set({
 					window: {
-						previous: window.previous.concat(current),
+						previous: window.previous?.concat(current),
 						current: next,
 						next: window.next.slice(1),
 					},
@@ -209,13 +218,20 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 				const current = window.current!;
 				const next = window.previous[0];
 
+				let audioUrl = "";
+				if ("audioUrl" in next) {
+					audioUrl = next.audioUrl;
+				} else if ("track" in next) {
+					audioUrl = next.track.audioUrl;
+				}
+
 				if (!get().hls) {
 					const hlsInstance = new Hls({startFragPrefetch: true, maxBufferLength: 30});
 					hlsInstance.attachMedia(audio);
 					set({hls: hlsInstance});
 				}
 
-				get().hls?.loadSource(next.audioUrl);
+				get().hls?.loadSource(audioUrl);
 				await audio.play();
 
 				set({

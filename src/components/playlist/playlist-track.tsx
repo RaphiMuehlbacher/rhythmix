@@ -7,16 +7,19 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
+	DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
 	DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu.tsx";
-import {useMutation} from "convex/react";
+import {useMutation, useQuery} from "convex/react";
 import {api} from "../../../convex/_generated/api";
+import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList} from "@/components/ui/command.tsx";
+import {useState} from "react";
 
 export default function PlaylistTrack({playlistTrack, playlistId}: {
 	playlistTrack: PlaylistTrackFull,
 	playlistId: Id<"playlists">
 }) {
+	const [open, setOpen] = useState(false);
 
 	const currentTrack = usePlayerStore(state => state.window.current);
 	const isPlaying = usePlayerStore(state => state.isPlaying);
@@ -26,9 +29,13 @@ export default function PlaylistTrack({playlistTrack, playlistId}: {
 	const resume = usePlayerStore(state => state.resume);
 	const playPlaylist = usePlayerStore(state => state.playPlaylist);
 
+	const playlists = useQuery(api.playlists.getAllByUser);
 	const removeTrack = useMutation(api.playlists.removeTrack);
+	const addTrack = useMutation(api.playlists.addTrack);
 
-	const trackIsSelected = context.type === "playlist" && context.id === playlistId && currentTrack?._id === playlistTrack.track._id;
+	const trackIsSelected = context.type === "playlist" && context.id === playlistId && currentTrack?._id === playlistTrack._id;
+
+	if (!playlists) return <h1>Loading...</h1>
 
 	const handlePlay = async (order: number) => {
 		if (isPlaying && trackIsSelected) {
@@ -107,7 +114,7 @@ export default function PlaylistTrack({playlistTrack, playlistId}: {
 						className="flex items-center justify-center text-muted-foreground text-sm">{formatTrackDuration(playlistTrack.track.duration)}
 				</div>
 				<div className="flex items-center justify-center">
-					<DropdownMenu>
+					<DropdownMenu open={open} onOpenChange={setOpen}>
 						<DropdownMenuTrigger asChild>
 							<MoreHorizontal size={22}
 															className="text-muted-foreground hover:text-foreground cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"/>
@@ -121,14 +128,44 @@ export default function PlaylistTrack({playlistTrack, playlistId}: {
 										<span className="text-neutral-300">Add to Playlist</span>
 									</div>
 								</DropdownMenuSubTrigger>
-								<DropdownMenuPortal>
-									<DropdownMenuSubContent>
-										<DropdownMenuItem>Email</DropdownMenuItem>
-										<DropdownMenuItem>Message</DropdownMenuItem>
-										<DropdownMenuSeparator/>
-										<DropdownMenuItem>More...</DropdownMenuItem>
-									</DropdownMenuSubContent>
-								</DropdownMenuPortal>
+								<DropdownMenuSubContent className="p-0">
+									<Command>
+										<CommandInput
+												placeholder="Filter playlists..."
+												autoFocus={true}
+												className="h-9"
+										/>
+										<CommandList>
+											<CommandEmpty>No playlist found.</CommandEmpty>
+											<CommandGroup>
+												{playlists
+														.map((playlist) => (
+																<CommandItem
+																		key={playlist._id}
+																		value={playlist.name}
+																		onSelect={async (currentValue) => {
+																			const selectedPlaylist = playlists.find(p => p.name === currentValue);
+																			if (selectedPlaylist) {
+																				setOpen(false);
+																				await addTrack({
+																					playlistId: selectedPlaylist._id,
+																					trackId: playlistTrack.track._id
+																				});
+																			}
+																		}}
+																>
+																	<div className="flex items-center gap-2">
+																		<img src={playlist.playlistPicUrl} alt="" width={24} height={24}
+																				 className="rounded"/>
+																		<span>{playlist.name}</span>
+
+																	</div>
+																</CommandItem>
+														))}
+											</CommandGroup>
+										</CommandList>
+									</Command>
+								</DropdownMenuSubContent>
 							</DropdownMenuSub>
 							<DropdownMenuItem onClick={() => removeTrack({playlistTrackId: playlistTrack._id})}>
 								<div className="flex items-center gap-2">
@@ -136,11 +173,9 @@ export default function PlaylistTrack({playlistTrack, playlistId}: {
 									<span className="text-neutral-300">Remove</span>
 								</div>
 							</DropdownMenuItem>
-
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
 			</div>
 	)
-
 }

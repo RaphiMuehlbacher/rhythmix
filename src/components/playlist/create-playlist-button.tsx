@@ -109,7 +109,6 @@ export default function CreatePlaylistButton() {
 										<img
 												src={defaultPlaylistImage}
 												alt="Empty"
-												// loading="eager"
 												className="absolute inset-0 w-full h-full object-cover"
 										/>
 									</DropzoneEmptyState>
