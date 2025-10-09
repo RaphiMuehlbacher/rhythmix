@@ -98,7 +98,7 @@ export default function ResultsPage() {
     .slice(0, 6)
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-7xl mx-auto">
 
         {/* Top Section */}
