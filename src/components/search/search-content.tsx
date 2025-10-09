@@ -2,7 +2,7 @@ import SongCard from "@/components/song-card.tsx"
 import { useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 
-export default function MainContent() {
+export default function SearchContent() {
   const tracks = useQuery(api.tracks.all)
 
   if (tracks == undefined) {
