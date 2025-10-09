@@ -1,12 +1,22 @@
 "use client";
 
 import { useParams } from "react-router";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import TopResult from "@/components/search/top-result";
 import SongList from "@/components/song-list";
 import SongCard from "@/components/song-card";
 import ArtistCard from "@/components/artist-card";
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuTrigger
+} from "@/components/ui/context-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CirclePlus } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { useState } from "react";
 
 const MAX_TOP_SONGS = 3;
 const MAX_RECOMMENDED_SONGS = 6;
@@ -23,6 +33,10 @@ export default function SearchResultsPage() {
 
 	const allTracks = useQuery(api.tracks.all);
 	const allArtists = useQuery(api.artists.all);
+	const playlists = useQuery(api.playlists.getAllByUser);
+	const addTrack = useMutation(api.playlists.addTrack);
+
+	const [open, setOpen] = useState<string | null>(null);
 
 	const topResultIsTrack = searchResults && searchResults.tracks.length > 0;
 	const topResultIsArtist = searchResults && searchResults.artists.length > 0 && searchResults.tracks.length === 0;
@@ -135,7 +149,59 @@ export default function SearchResultsPage() {
 						<h2 className="text-white text-2xl font-bold mb-6">More songs</h2>
 						<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
 							{searchedTracks.slice(MAX_TOP_SONGS).map((song) => (
-								<SongCard key={song._id} track={song} artist={song.artist} />
+								<Popover key={song._id} open={open === song._id} onOpenChange={(isOpen) => setOpen(isOpen ? song._id : null)}>
+									<ContextMenu>
+										<ContextMenuTrigger>
+											<SongCard track={song} artist={song.artist} />
+										</ContextMenuTrigger>
+										<ContextMenuContent className="w-52">
+											<ContextMenuItem>
+												<PopoverTrigger asChild>
+													<div className="flex items-center gap-2">
+														<CirclePlus size={15} className="text-neutral-400"/>
+														<span className="text-neutral-300">Add to Playlist</span>
+													</div>
+												</PopoverTrigger>
+											</ContextMenuItem>
+										</ContextMenuContent>
+									</ContextMenu>
+									<PopoverContent>
+										<Command>
+											<CommandInput
+												placeholder="Filter playlists..."
+												autoFocus={true}
+												className="h-9"
+											/>
+											<CommandList>
+												<CommandEmpty>No playlist found.</CommandEmpty>
+												<CommandGroup>
+													{playlists?.map((playlist) => (
+														<CommandItem
+															key={playlist._id}
+															value={playlist.name}
+															onSelect={async (currentValue) => {
+																const selectedPlaylist = playlists.find(p => p.name === currentValue);
+																if (selectedPlaylist) {
+																	setOpen(null);
+																	await addTrack({
+																		playlistId: selectedPlaylist._id,
+																		trackId: song._id
+																	});
+																}
+															}}
+														>
+															<div className="flex items-center gap-2">
+																<img src={playlist.playlistPicUrl} alt="" width={24} height={24}
+																		 className="rounded"/>
+																<span>{playlist.name}</span>
+															</div>
+														</CommandItem>
+													))}
+												</CommandGroup>
+											</CommandList>
+										</Command>
+									</PopoverContent>
+								</Popover>
 							))}
 						</div>
 					</section>
@@ -146,7 +212,59 @@ export default function SearchResultsPage() {
 						<h2 className="text-white text-2xl font-bold mb-6">Similar songs</h2>
 						<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
 							{recommendedSongs.map((song) => (
-								<SongCard key={song._id} track={song} artist={song.artist} />
+								<Popover key={song._id} open={open === song._id} onOpenChange={(isOpen) => setOpen(isOpen ? song._id : null)}>
+									<ContextMenu>
+										<ContextMenuTrigger>
+											<SongCard track={song} artist={song.artist} />
+										</ContextMenuTrigger>
+										<ContextMenuContent className="w-52">
+											<ContextMenuItem>
+												<PopoverTrigger asChild>
+													<div className="flex items-center gap-2">
+														<CirclePlus size={15} className="text-neutral-400"/>
+														<span className="text-neutral-300">Add to Playlist</span>
+													</div>
+												</PopoverTrigger>
+											</ContextMenuItem>
+										</ContextMenuContent>
+									</ContextMenu>
+									<PopoverContent>
+										<Command>
+											<CommandInput
+												placeholder="Filter playlists..."
+												autoFocus={true}
+												className="h-9"
+											/>
+											<CommandList>
+												<CommandEmpty>No playlist found.</CommandEmpty>
+												<CommandGroup>
+													{playlists?.map((playlist) => (
+														<CommandItem
+															key={playlist._id}
+															value={playlist.name}
+															onSelect={async (currentValue) => {
+																const selectedPlaylist = playlists.find(p => p.name === currentValue);
+																if (selectedPlaylist) {
+																	setOpen(null);
+																	await addTrack({
+																		playlistId: selectedPlaylist._id,
+																		trackId: song._id
+																	});
+																}
+															}}
+														>
+															<div className="flex items-center gap-2">
+																<img src={playlist.playlistPicUrl} alt="" width={24} height={24}
+																		 className="rounded"/>
+																<span>{playlist.name}</span>
+															</div>
+														</CommandItem>
+													))}
+												</CommandGroup>
+											</CommandList>
+										</Command>
+									</PopoverContent>
+								</Popover>
 							))}
 						</div>
 					</section>

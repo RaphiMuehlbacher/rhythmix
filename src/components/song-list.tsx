@@ -5,13 +5,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { useMutation, useQuery } from "convex/react"
+import { api } from "../../convex/_generated/api"
+import { useState } from "react"
 
 interface SongListProps {
   songs: TrackFull[]
@@ -24,6 +26,10 @@ export default function SongList({ songs }: SongListProps) {
   const pause = usePlayerStore(state => state.pause)
   const resume = usePlayerStore(state => state.resume)
 
+  const playlists = useQuery(api.playlists.getAllByUser)
+  const addTrack = useMutation(api.playlists.addTrack)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+
   const handlePlay = async (trackId: string) => {
     const trackIsSelected = currentTrack?._id === trackId
 
@@ -35,6 +41,8 @@ export default function SongList({ songs }: SongListProps) {
       await playTrack(trackId)
     }
   }
+
+  if (!playlists) return null
 
   return (
     <div className="space-y-1">
@@ -73,7 +81,7 @@ export default function SongList({ songs }: SongListProps) {
             </div>
 
             <div className="flex items-center justify-center">
-              <DropdownMenu>
+              <DropdownMenu open={openDropdown === song._id} onOpenChange={(isOpen) => setOpenDropdown(isOpen ? song._id : null)}>
                 <DropdownMenuTrigger asChild>
                   <MoreHorizontal
                     size={22}
@@ -89,14 +97,41 @@ export default function SongList({ songs }: SongListProps) {
                         <span className="text-neutral-300">Add to Playlist</span>
                       </div>
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent>
-                        <DropdownMenuItem>Email</DropdownMenuItem>
-                        <DropdownMenuItem>Message</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>More...</DropdownMenuItem>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
+                    <DropdownMenuSubContent className="p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Filter playlists..."
+                          autoFocus={true}
+                          className="h-9"
+                        />
+                        <CommandList>
+                          <CommandEmpty>No playlist found.</CommandEmpty>
+                          <CommandGroup>
+                            {playlists.map((playlist) => (
+                              <CommandItem
+                                key={playlist._id}
+                                value={playlist.name}
+                                onSelect={async (currentValue) => {
+                                  const selectedPlaylist = playlists.find(p => p.name === currentValue)
+                                  if (selectedPlaylist) {
+                                    setOpenDropdown(null)
+                                    await addTrack({
+                                      playlistId: selectedPlaylist._id,
+                                      trackId: song._id
+                                    })
+                                  }
+                                }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <img src={playlist.playlistPicUrl} alt="" width={24} height={24} className="rounded" />
+                                  <span>{playlist.name}</span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </DropdownMenuSubContent>
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
