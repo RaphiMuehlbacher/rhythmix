@@ -64,7 +64,7 @@ export default function SearchResultsPage() {
 	const topResultType = searchedTracks.length > 0 ? "track" : "artist";
 
 	const getTopSongs = () => {
-		let songs = searchedTracks.slice(1, MIN_SONGS_FOR_MORE_SECTION);
+		let songs = searchedTracks.slice(1, MAX_TOP_SONGS + 1);
 
 		if (artistTracks && songs.length < MAX_TOP_SONGS) {
 			const searchedTrackIds = new Set(searchedTracks.map((t) => t._id));

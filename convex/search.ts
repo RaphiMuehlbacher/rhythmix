@@ -16,7 +16,7 @@ export const getSearchResults = query({
 				const artist = await ctx.db.get(track.artistId);
 				return {
 					...track,
-					artist: artist!,
+					artist: artist,
 				};
 			})
 		);

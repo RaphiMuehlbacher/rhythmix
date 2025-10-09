@@ -63,8 +63,7 @@ export default function Topbar() {
 
 	const getTotalResultsCount = () => {
 		if (!searchResults) return 0;
-		return Math.min(searchResults.tracks.length, MAX_DROPDOWN_TRACKS) +
-		       Math.min(searchResults.artists.length, MAX_DROPDOWN_ARTISTS);
+		return Math.min(searchResults.tracks.length, MAX_DROPDOWN_TRACKS) + Math.min(searchResults.artists.length, MAX_DROPDOWN_ARTISTS);
 	};
 
 	const navigateToSelectedResult = () => {
