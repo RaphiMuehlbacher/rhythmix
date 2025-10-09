@@ -8,6 +8,7 @@ import Artist from "@/pages/artist.tsx";
 import {MainLayout} from "@/components/main-layout.tsx";
 import Playlists from "@/pages/playlists.tsx";
 import Playlist from "@/pages/playlist.tsx";
+import ResultsPage from "@/pages/search-results.tsx";
 
 export default function App() {
 	return (
@@ -19,6 +20,7 @@ export default function App() {
 							<Route index element={<MainContent/>}/>
 							<Route path="playlists" element={<Playlists/>}/>
 							<Route path="playlists/:playlistId" element={<Playlist/>}/>
+							<Route path="search/:searchTerm" element={<ResultsPage/>}/>
 						</Route>
 					</Route>
 
@@ -32,4 +34,3 @@ export default function App() {
 			</>
 	)
 }
-

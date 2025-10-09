@@ -29,20 +29,20 @@ export default function SongCard({track, artist}: { track: Track, artist: Artist
 					<img
             src={track.coverUrl}
             alt={track.title}
-            className="w-[200px] h-[200px] rounded-lg object-cover"
+            className="w-full aspect-square rounded-lg object-cover"
           />
 
 					<button
 							onClick={handleClick}
 							className={cn(
-									"flex items-center justify-center absolute bottom-2 right-2 rounded-full bg-green-500 size-12 p-2 transition-transform transform hover:scale-[1.03] duration-75",
+									"flex items-center justify-center absolute bottom-2 right-2 rounded-full bg-green-500 size-10 sm:size-12 p-2 transition-transform transform hover:scale-[1.03] duration-75",
 									correctTrack && isPlaying ? "flex" : "hidden group-hover:flex"
 							)}
 					>
 						{correctTrack && isPlaying ? (
 								<svg
 										viewBox="0 0 16 16"
-										className="size-6 transition-transform transform hover:scale-[1.03] duration-75"
+										className="size-4 sm:size-6 transition-transform transform hover:scale-[1.03] duration-75"
 								>
 									<path
 											d="M2.7 1a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7H2.7zm8 0a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-2.6z"></path>
@@ -50,7 +50,7 @@ export default function SongCard({track, artist}: { track: Track, artist: Artist
 						) : (
 								<svg
 										viewBox="0 0 24 24"
-										className="size-6 transition-transform transform hover:scale-[1.03] duration-75"
+										className="size-4 sm:size-6 transition-transform transform hover:scale-[1.03] duration-75"
 								>
 									<path
 											d="m7.05 3.606 13.49 7.788a.7.7 0 0 1 0 1.212L7.05 20.394A.7.7 0 0 1 6 19.788V4.212a.7.7 0 0 1 1.05-.606z"></path>
@@ -59,8 +59,8 @@ export default function SongCard({track, artist}: { track: Track, artist: Artist
 						)}
 					</button>
 				</div>
-				<h3 className="font-semibold truncate mb-1">{track.title}</h3>
-				<p className="text-sm text-neutral-400 truncate">{artist.name}</p>
+				<h3 className="font-semibold truncate mb-1 text-sm sm:text-base">{track.title}</h3>
+				<p className="text-xs sm:text-sm text-neutral-400 truncate">{artist.name}</p>
 			</div>
 	);
 }
