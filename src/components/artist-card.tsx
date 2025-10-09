@@ -1,4 +1,4 @@
-import type { Artist } from "../../../convex/artists"
+import type { Artist } from "../../convex/artists"
 
 interface ArtistCardProps {
   artist: Artist
@@ -26,3 +26,4 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
     </div>
   )
 }
+
