@@ -4,7 +4,6 @@ import {api} from "../../convex/_generated/api";
 import {
 	ContextMenu,
 	ContextMenuContent,
-	ContextMenuItem,
 	ContextMenuSub,
 	ContextMenuSubContent,
 	ContextMenuSubTrigger,
@@ -19,14 +18,12 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command.tsx";
-import {useState} from "react";
 
 export default function MainContent() {
 	const tracks = useQuery(api.tracks.all);
 	const playlists = useQuery(api.playlists.getAllByUser);
 	const addTrack = useMutation(api.playlists.addTrack);
 
-	const [openContextMenu, setOpenContextMenu] = useState<string | null>(null);
 
 	if (!tracks || !playlists) {
 		return <h1>Loading...</h1>;
@@ -39,7 +36,6 @@ export default function MainContent() {
 						{tracks.slice(0, 10).map((track) => (
 								<ContextMenu
 										key={track._id}
-										onOpenChange={(isOpen) => setOpenContextMenu(isOpen ? track._id : null)}
 								>
 									<ContextMenuTrigger className="flex-shrink-0 w-[200px]">
 										<SongCard track={track} artist={track.artist}/>
@@ -72,7 +68,6 @@ export default function MainContent() {
 																						(p) => p.name === currentValue
 																				);
 																				if (selectedPlaylist) {
-																					setOpenContextMenu(null);
 																					await addTrack({
 																						playlistId: selectedPlaylist._id,
 																						trackId: track._id,
