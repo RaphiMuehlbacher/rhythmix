@@ -167,7 +167,7 @@ export default function RightSidebar() {
 																					<DropdownMenuSubContent className="p-0">
 																						<Command>
 																							<CommandInput
-																									placeholder="Playlists filtern..."
+																									placeholder="Filter playlists..."
 																									autoFocus={true}
 																									className="h-9"
 																							/>
@@ -270,7 +270,7 @@ export default function RightSidebar() {
 																					<DropdownMenuSubContent className="p-0">
 																						<Command>
 																							<CommandInput
-																									placeholder="Playlists filtern..."
+																									placeholder="Filter playlists..."
 																									autoFocus={true}
 																									className="h-9"
 																							/>
@@ -363,7 +363,7 @@ export default function RightSidebar() {
 																					<DropdownMenuSubContent className="p-0">
 																						<Command>
 																							<CommandInput
-																									placeholder="Playlists filtern..."
+																									placeholder="Filter Pla..."
 																									autoFocus={true}
 																									className="h-9"
 																							/>
