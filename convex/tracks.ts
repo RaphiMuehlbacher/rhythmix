@@ -26,6 +26,8 @@ export const all = query({
 
 		return await Promise.all(tracks.map(async (track) => {
 			const artist = await ctx.db.get(track.artistId);
+			if (!artist) throw Error("something went wrong");
+
 			return {
 				...track,
 				artist: artist,

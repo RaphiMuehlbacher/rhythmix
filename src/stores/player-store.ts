@@ -32,8 +32,14 @@ type PlayerStore = {
 	duration: number,
 	volume: number,
 
+	isRightSidebarOpen: boolean,
+	rightSidebarTab: "CurrentTrack" | "Queue" | "Lyrics",
+	setRightSidebarTab: (tab: "CurrentTrack" | "Queue" | "Lyrics") => void,
+	toggleRightSidebar: (tab?: "CurrentTrack" | "Queue" | "Lyrics") => void,
+
 	setVolume: (volume: number) => void,
 	playTrack: (id: Id<"tracks">) => Promise<void>,
+	playTrackFromQueue: (trackId: Id<"tracks">) => Promise<void>,
 	playPlaylist: (id: Id<"playlists">, startIndex?: number) => Promise<void>,
 	nextTrack: () => Promise<void>,
 	previousTrack: () => Promise<void>,
@@ -66,6 +72,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 		progress: 0,
 		duration: 0,
 		volume: audio.volume * 100,
+
+		isRightSidebarOpen: false,
+		rightSidebarTab: "CurrentTrack",
 
 		setConvexClient: (c) => set({convexClient: c}),
 
@@ -125,6 +134,58 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 				progress: 0,
 				duration: audio.duration * 1000
 			})
+		},
+
+		playTrackFromQueue: async (trackId: Id<"tracks">) => {
+			const {window} = get();
+
+			const queueIndex = window.next.findIndex(item => {
+				const track = "track" in item ? item.track : item;
+				return track._id === trackId;
+			});
+
+			if (queueIndex === -1) {
+				await get().playTrack(trackId);
+				return;
+			}
+
+			const selectedTrack = window.next[queueIndex];
+			const tracksBeforeSelected = window.next.slice(0, queueIndex);
+			const tracksAfterSelected = window.next.slice(queueIndex + 1);
+
+			let audioUrl = "";
+			if ("audioUrl" in selectedTrack) {
+				audioUrl = selectedTrack.audioUrl;
+			} else if ("track" in selectedTrack) {
+				audioUrl = selectedTrack.track.audioUrl;
+			}
+
+			if (!get().hls) {
+				const hlsInstance = new Hls({startFragPrefetch: true, maxBufferLength: 30});
+				hlsInstance.attachMedia(audio);
+				set({hls: hlsInstance});
+			}
+
+			get().hls?.loadSource(audioUrl);
+			await audio.play();
+
+			const newPrevious = [...window.previous];
+			if (window.current) {
+				newPrevious.push(window.current);
+			}
+			newPrevious.push(...tracksBeforeSelected);
+
+			set({
+				window: {
+					previous: newPrevious,
+					current: selectedTrack,
+					next: tracksAfterSelected,
+				},
+				currentIndex: newPrevious.length,
+				progress: 0,
+				duration: audio.duration * 1000,
+				isPlaying: true
+			});
 		},
 
 		playPlaylist: async (playlistId: Id<"playlists">, startIndex = 0) => {
@@ -216,13 +277,13 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 			const {window, currentIndex} = get();
 			if (window.previous.length > 0) {
 				const current = window.current!;
-				const next = window.previous[0];
+				const previous = window.previous[window.previous.length - 1]; // Take the last item, not the first
 
 				let audioUrl = "";
-				if ("audioUrl" in next) {
-					audioUrl = next.audioUrl;
-				} else if ("track" in next) {
-					audioUrl = next.track.audioUrl;
+				if ("audioUrl" in previous) {
+					audioUrl = previous.audioUrl;
+				} else if ("track" in previous) {
+					audioUrl = previous.track.audioUrl;
 				}
 
 				if (!get().hls) {
@@ -236,9 +297,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 
 				set({
 					window: {
-						previous: window.previous.slice(1),
-						current: next,
-						next: window.next.concat(current),
+						previous: window.previous.slice(0, -1), // Remove the last item
+						current: previous,
+						next: [current, ...window.next], // Add current to the front of next
 					},
 					currentIndex: currentIndex - 1,
 					progress: 0,
@@ -248,6 +309,22 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 			} else {
 				get().pause();
 			}
-		}
+		},
+
+		setRightSidebarTab: (tab) => set({rightSidebarTab: tab}),
+
+		toggleRightSidebar: (tab) => {
+			const currentState = get();
+
+			if (tab) {
+				if (currentState.isRightSidebarOpen && currentState.rightSidebarTab === tab) {
+					set({isRightSidebarOpen: false});
+				} else {
+					set({rightSidebarTab: tab, isRightSidebarOpen: true});
+				}
+			} else {
+				set({isRightSidebarOpen: !currentState.isRightSidebarOpen});
+			}
+		},
 	}
 })
