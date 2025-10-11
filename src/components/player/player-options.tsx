@@ -1,14 +1,26 @@
 import VolumeBar from "@/components/player/player-volume-bar.tsx";
+import {usePlayerStore} from "@/stores/player-store.ts";
 
 export default function PlayerOptions() {
-	const activeComponent = "CurrentTrack";
+	const isRightSidebarOpen = usePlayerStore(state => state.isRightSidebarOpen);
+	const activeComponent = usePlayerStore(state => state.rightSidebarTab);
+	const toggleRightSidebar = usePlayerStore(state => state.toggleRightSidebar);
+
+	const handleTabClick = (tab: "CurrentTrack" | "Queue" | "Lyrics") => {
+		if (isRightSidebarOpen && activeComponent === tab) {
+			toggleRightSidebar();
+		} else {
+			toggleRightSidebar(tab);
+		}
+	};
 
 	return (
 			<div className="flex items-center justify-end gap-4">
 				<button
-						className={'cursor-pointer group'}
+						onClick={() => handleTabClick("CurrentTrack")}
+						className="cursor-pointer group"
 				>
-					{activeComponent == 'CurrentTrack' ? (
+					{isRightSidebarOpen && activeComponent === 'CurrentTrack' ? (
 							<svg
 									viewBox="0 0 16 16"
 									className="size-4 group-disabled:fill-zinc-600 fill-green-500"
@@ -30,9 +42,10 @@ export default function PlayerOptions() {
 				</button>
 
 				<button
-						className={'cursor-pointer group'}
+						onClick={() => handleTabClick("Lyrics")}
+						className="cursor-pointer group"
 				>
-					{activeComponent == 'Lyrics' ? (
+					{isRightSidebarOpen && activeComponent === 'Lyrics' ? (
 							<svg
 									viewBox="0 0 16 16"
 									className="size-4 fill-green-500 group-disabled:fill-zinc-600"
@@ -52,9 +65,10 @@ export default function PlayerOptions() {
 				</button>
 
 				<button
-						className={'cursor-pointer group'}
+						onClick={() => handleTabClick("Queue")}
+						className="cursor-pointer group"
 				>
-					{activeComponent == 'Queue' ? (
+					{isRightSidebarOpen && activeComponent === 'Queue' ? (
 							<svg
 									viewBox="0 0 16 16"
 									className="size-4 fill-green-500 group-disabled:fill-zinc-600"
@@ -69,27 +83,6 @@ export default function PlayerOptions() {
 							>
 								<path
 										d="M15 15H1v-1.5h14V15zm0-4.5H1V9h14v1.5zm-14-7A2.5 2.5 0 0 1 3.5 1h9a2.5 2.5 0 0 1 0 5h-9A2.5 2.5 0 0 1 1 3.5zm2.5-1a1 1 0 0 0 0 2h9a1 1 0 1 0 0-2h-9z"></path>
-							</svg>
-					)}
-				</button>
-
-				<button
-						className={'cursor-pointer group'}
-				>
-					{activeComponent == 'Devices' ? (
-							<svg viewBox="0 0 16 16" className="size-4 fill-green-500">
-								<path
-										d="M6 2.75C6 1.784 6.784 1 7.75 1h6.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 14.25 15h-6.5A1.75 1.75 0 0 1 6 13.25V2.75zm1.75-.25a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h6.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25h-6.5zm-6 0a.25.25 0 0 0-.25.25v6.5c0 .138.112.25.25.25H4V11H1.75A1.75 1.75 0 0 1 0 9.25v-6.5C0 1.784.784 1 1.75 1H4v1.5H1.75zM4 15H2v-1.5h2V15z"></path>
-								<path d="M13 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm-1-5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"></path>
-							</svg>
-					) : (
-							<svg
-									viewBox="0 0 16 16"
-									className="size-4 fill-zinc-400 hover:fill-white"
-							>
-								<path
-										d="M6 2.75C6 1.784 6.784 1 7.75 1h6.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 14.25 15h-6.5A1.75 1.75 0 0 1 6 13.25V2.75zm1.75-.25a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h6.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25h-6.5zm-6 0a.25.25 0 0 0-.25.25v6.5c0 .138.112.25.25.25H4V11H1.75A1.75 1.75 0 0 1 0 9.25v-6.5C0 1.784.784 1 1.75 1H4v1.5H1.75zM4 15H2v-1.5h2V15z"></path>
-								<path d="M13 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm-1-5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"></path>
 							</svg>
 					)}
 				</button>
