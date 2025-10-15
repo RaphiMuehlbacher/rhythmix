@@ -41,6 +41,13 @@ Create a `.env.local` file with your Convex deployment URL and authentication se
 
 The application will be available at `http://localhost:5173`
 
+### CI/CDa
+
+The project includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically:
+- Deploys Convex functions
+- Builds the frontend application
+- Deploys to Raspberry Pi via Cloudflare Tunnel
+
 ### Backend Setup (Raspberry Pi)
 
 ```bash
@@ -50,9 +57,9 @@ cd raspi_backend
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Install FFmpeg
+# Install FFmpeg and nginx
 sudo apt-get update
-sudo apt-get install ffmpeg
+sudo apt-get install ffmpeg nginx
 
 # Create required directories
 sudo mkdir -p /var/www/html/rhythmix/audio_files
@@ -60,6 +67,8 @@ sudo mkdir -p /var/www/html/rhythmix/covers
 sudo mkdir -p /var/www/html/rhythmix/profile-images
 sudo mkdir -p /var/www/html/rhythmix/playlist-images
 mkdir -p /home/raspi1/rhythmix/audio_files_tmp
+
+# Configure nginx to serve /var/www/html/rhythmix
 
 # Run FastAPI server
 uvicorn main:app --host 0.0.0.0 --port 8000
@@ -107,6 +116,7 @@ FastAPI service handling media processing:
 - **Multi-format Support** - Accepts MP3, WAV, FLAC, M4A
 - **HLS Generation** - Creates adaptive streaming segments
 - **Image Processing** - Handles cover art, profile pictures, and playlist images
+- **File Serving** - nginx exposes the `/var/www/html/rhythmix` folder for static file access
 
 **API Endpoints:**
 - `POST /upload-song` - Accepts audio file + cover, transcodes to HLS, returns duration and URLs
