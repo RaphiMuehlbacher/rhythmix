@@ -1,69 +1,125 @@
-# React + TypeScript + Vite
+# Rhythmix
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack music streaming platform with HLS audio delivery, artist uploads, playlists, and real-time search.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- **Authentication** - Email/password and Google OAuth via Convex Auth
+- **Artist Dashboard** - Upload tracks with cover art and manage artist profile
+- **Music Playback** - HLS streaming with real-time playback controls and volume management
+- **Playlists** - Create, edit, and manage custom playlists
+- **Search** - Real-time search functionality for tracks and artists
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Installation
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 18+
+- Python 3.13+
+- FFmpeg
+- Raspberry Pi or Linux server
+- Convex account
+
+### Frontend Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Set up Convex
+npx convex dev
+
+# Run development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Create a `.env.local` file with your Convex deployment URL and authentication settings.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The application will be available at `http://localhost:5173`
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Backend Setup (Raspberry Pi)
+
+```bash
+# Navigate to backend directory
+cd raspi_backend
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Install FFmpeg
+sudo apt-get update
+sudo apt-get install ffmpeg
+
+# Create required directories
+sudo mkdir -p /var/www/html/rhythmix/audio_files
+sudo mkdir -p /var/www/html/rhythmix/covers
+sudo mkdir -p /var/www/html/rhythmix/profile-images
+sudo mkdir -p /var/www/html/rhythmix/playlist-images
+mkdir -p /home/raspi1/rhythmix/audio_files_tmp
+
+# Run FastAPI server
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
+
+---
+
+## Technical Overview
+
+### React
+
+Built with **React 19** using:
+
+- **React Router** - routing with protected routes
+- **Zustand** - state management for the player
+- **React Hook Form + Zod** - form validation
+- **TailwindCSS v4** - styling
+- **Vite** - build tooling
+- **shadcn/ui** - UI components
+- **HLS.js** - audio streaming
+
+### Convex
+
+Convex serves as the backend-as-a-service providing:
+
+- Real-time database with live queries
+- Secure authentication system
+- Full-text search indexes
+- File storage and URL management
+- Server-side functions for data operations
+
+**Database Schema:**
+- `users` - User accounts with authentication
+- `artists` - Artist profiles linked to users
+- `tracks` - Song metadata (title, duration, URLs)
+- `playlists` - User-created playlists
+- `playlistsTracks` - Track ordering within playlists
+- `playbackStates` - Current playback state per user
+
+### Raspberry Pi Backend
+
+FastAPI service handling media processing:
+
+- **Audio Transcoding** - Converts uploaded audio to HLS format using FFmpeg
+- **Multi-format Support** - Accepts MP3, WAV, FLAC, M4A
+- **HLS Generation** - Creates adaptive streaming segments
+- **Image Processing** - Handles cover art, profile pictures, and playlist images
+
+**API Endpoints:**
+- `POST /upload-song` - Accepts audio file + cover, transcodes to HLS, returns duration and URLs
+- `POST /upload-profile-picture` - Handles artist profile image uploads
+- `POST /upload-playlist-image` - Manages playlist cover images
+
+---
+
+## Future
+
+Planned features and improvements:
+- Show similar songs
+- Music recommendations based on listening history
+- Synchronized lyrics during playback
+- Advanced search filters (genre, mood, release date)
+- Artist analytics dashboard with play counts and listener
