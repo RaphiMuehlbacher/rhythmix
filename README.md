@@ -2,6 +2,8 @@
 
 A full-stack music streaming platform with HLS audio delivery, artist uploads, playlists, and real-time search.
 
+**Live Demo:** [https://rhythmix.redstphillip.uk](https://rhythmix.redstphillip.uk/)
+
 ---
 
 ## Features
@@ -41,7 +43,7 @@ Create a `.env.local` file with your Convex deployment URL and authentication se
 
 The application will be available at `http://localhost:5173`
 
-### CI/CDa
+### CI/CD
 
 The project includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically:
 - Deploys Convex functions
