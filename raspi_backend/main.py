@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from pathlib import Path
 import shutil
 import subprocess
@@ -49,7 +49,6 @@ def get_audio_duration(path: Path) -> int:
 
 @app.post("/upload-song")
 async def upload_audio(
-    song_id: str = Form(...),
     file: UploadFile = File(...),
     cover: UploadFile = File(...),
 ):
@@ -65,6 +64,9 @@ async def upload_audio(
             status_code=400,
             detail=f"Only files with extensions {sorted(ALLOWED_IMG_EXTENSIONS)} are allowed"
         )
+
+    # Generate UUID for this song
+    song_id = str(uuid.uuid4())
 
     # Save cover
     cover_path = COVER_DIR / f"{song_id}{ext_cover}"
@@ -122,16 +124,14 @@ async def upload_audio(
 
     return {
         "status": "success",
-        "trackId": song_id,
+        "songId": song_id,
         "duration": duration_ms,
-        "filePath": str(hls_output),
-        "coverPath": str(cover_path),
+        "coverExt": ext_cover,
     }
 
 
 @app.post("/upload-profile-picture")
 async def upload_profile_picture(
-    artist_id: str = Form(...),
     file: UploadFile = File(...),
 ):
     # Validate extension
@@ -142,14 +142,13 @@ async def upload_profile_picture(
             detail=f"Only files with extensions {sorted(ALLOWED_IMG_EXTENSIONS)} are allowed"
         )
 
-    filename = f"{artist_id}{ext}"
+    filename = f"{uuid.uuid4()}{ext}"
     profile_path = PROFILE_IMG_DIR / filename
     with open(profile_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     return {
         "status": "success",
-        "artistId": artist_id,
-        "filename": str(filename),
+        "filename": filename,
     }
 
 
@@ -170,6 +169,5 @@ async def upload_playlist_cover(file: UploadFile = File(...)):
 
     return {
         "status": "success",
-        "filename": str(filename),
-        "filePath": str(img_path),
+        "filename": filename,
     }

@@ -26,7 +26,7 @@ export default function SongForm() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  const uploadSong = useAction(api.artists.uploadSong)
+  const uploadTrack = useAction(api.artists.uploadTrack)
 
   const form = useForm<SongFormValues>({
     resolver: zodResolver(songFormSchema),
@@ -77,7 +77,7 @@ export default function SongForm() {
         audioFile.arrayBuffer(),
       ])
 
-      await uploadSong({
+      await uploadTrack({
         title: values.title,
         lyrics: values.lyrics || "",
         image: imageArrayBuffer,

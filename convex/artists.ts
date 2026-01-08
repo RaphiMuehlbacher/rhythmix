@@ -42,36 +42,23 @@ export const getArtistByCurrentUser = query({
 	}
 })
 
-export const createSongMinimal = mutation({
+export const createTrack = mutation({
 	args: {
 		title: v.string(),
 		artistId: v.id("artists"),
 		lyrics: v.optional(v.string()),
-	},
-	handler: async (ctx, {title, artistId, lyrics}) => {
-		return await ctx.db.insert("tracks", {
-			title,
-			artistId: artistId,
-			duration: 0,
-			lyrics: lyrics || "",
-			coverUrl: "",
-			audioUrl: "",
-		});
-	},
-});
-
-export const updateSongAfterUpload = mutation({
-	args: {
-		trackId: v.id("tracks"),
 		duration: v.float64(),
 		audioUrl: v.string(),
 		coverUrl: v.string(),
 	},
-	handler: async (ctx, args) => {
-		await ctx.db.patch(args.trackId, {
-			duration: args.duration,
-			audioUrl: args.audioUrl,
-			coverUrl: args.coverUrl,
+	handler: async (ctx, {title, artistId, lyrics, duration, audioUrl, coverUrl}) => {
+		return await ctx.db.insert("tracks", {
+			title,
+			artistId,
+			duration,
+			lyrics: lyrics || "",
+			coverUrl,
+			audioUrl,
 		});
 	},
 });
@@ -80,13 +67,11 @@ type UploadResponse = {
 	status: string;
 	trackId: Id<"tracks">;
 	duration: number;
-	filePath: string;
-	coverPath: string;
 	audioUrl: string;
 	coverUrl: string;
 };
 
-export const uploadSong = action({
+export const uploadTrack = action({
 	args: {
 		title: v.string(),
 		lyrics: v.optional(v.string()),
@@ -101,14 +86,8 @@ export const uploadSong = action({
 		const artist = await ctx.runQuery(api.artists.getArtistByCurrentUser);
 		if (!artist) throw new Error("something went wrong");
 
-		const trackId = await ctx.runMutation(api.artists.createSongMinimal, {
-			title: args.title,
-			artistId: artist._id,
-			lyrics: args.lyrics,
-		});
-
+		// Build form data without song_id - server generates UUID
 		const formData = new FormData();
-		formData.append("song_id", String(trackId));
 
 		const audioBlob = new Blob([args.audio], {
 			type: args.audioMimeType ?? "audio/mpeg",
@@ -120,40 +99,46 @@ export const uploadSong = action({
 		});
 		formData.append("cover", coverBlob, args.imageFilename ?? "cover.webp");
 
+		// Upload to raspi server first
 		const res = await fetch(`https://api-rhythmix.redstphillip.uk/upload-song`, {
-      method: "POST",
-      body: formData,
-    });
+			method: "POST",
+			body: formData,
+		});
 
 		if (!res.ok) {
 			const errText = await res.text().catch(() => "");
 			throw new Error(
-					`Upload failed with status ${res.status} ${res.statusText}${errText ? `: ${errText}` : ""}`
+				`Upload failed with status ${res.status} ${res.statusText}${errText ? `: ${errText}` : ""}`
 			);
 		}
 
 		const data: {
 			status: string;
-			trackId: Id<"tracks">;
+			songId: string;
 			duration: number;
-			filePath: string;
-			coverPath: string;
+			coverExt: string;
 		} = await res.json();
 
-		const mediaSongId = data.trackId;
-		const audioUrl = `https://rhythmix.redstphillip.uk/rhythmix/audio_files/${mediaSongId}/output.m3u8`;
-		const coverFilename = data.coverPath.split("/").pop() ?? "cover.webp";
-		const coverUrl = `https://rhythmix.redstphillip.uk/rhythmix/covers/${coverFilename}`;
+		// Build URLs from the server-generated UUID
+		const songId = data.songId;
+		const audioUrl = `https://rhythmix.redstphillip.uk/rhythmix/audio_files/${songId}/output.m3u8`;
+		// Use the exact extension the backend saved the cover with
+		const coverUrl = `https://rhythmix.redstphillip.uk/rhythmix/covers/${songId}${data.coverExt}`;
 
-		await ctx.runMutation(api.artists.updateSongAfterUpload, {
-			trackId,
+		// Create track in database after successful upload
+		const trackId = await ctx.runMutation(api.artists.createTrack, {
+			title: args.title,
+			artistId: artist._id,
+			lyrics: args.lyrics,
 			duration: data.duration,
 			audioUrl,
 			coverUrl,
 		});
 
 		return {
-			...data,
+			status: data.status,
+			trackId,
+			duration: data.duration,
 			audioUrl,
 			coverUrl,
 		};
@@ -198,7 +183,6 @@ export const uploadArtistProfilePic = action({
 		if (!artist) throw new Error("something went wrong");
 
 		const formData = new FormData();
-		formData.append("artist_id", String(artist._id));
 
 		const imageBlob = new Blob([args.image], {
 			type: args.imageMimeType ?? "image/png",
@@ -219,7 +203,6 @@ export const uploadArtistProfilePic = action({
 
 		const data: {
 			status: string;
-			artistId: string;
 			filename: string;
 		} = await res.json();
 
