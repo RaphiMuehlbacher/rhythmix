@@ -17,9 +17,11 @@ import {useState} from "react";
 export default function RightSidebar() {
 	const isOpen = usePlayerStore(state => state.isRightSidebarOpen);
 	const activeTab = usePlayerStore(state => state.rightSidebarTab);
-	const queue = usePlayerStore(state => state.window.next);
+	const priorityQueue = usePlayerStore(state => state.priorityQueue);
+	const playlistQueue = usePlayerStore(state => state.playlistQueue);
 	const currentTrack = usePlayerStore(state => state.window.current);
 	const isPlaying = usePlayerStore(state => state.isPlaying);
+	const context = usePlayerStore(state => state.context);
 
 	const playTrack = usePlayerStore(state => state.playTrack);
 	const playTrackFromQueue = usePlayerStore(state => state.playTrackFromQueue);
@@ -27,6 +29,10 @@ export default function RightSidebar() {
 	const resume = usePlayerStore(state => state.resume);
 
 	const playlists = useQuery(api.playlists.getAllByUser);
+	const currentPlaylist = useQuery(
+			api.playlists.get,
+			context.type === "playlist" && context.id ? {id: context.id} : "skip"
+	);
 	const addTrack = useMutation(api.playlists.addTrack);
 	const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
@@ -45,7 +51,8 @@ export default function RightSidebar() {
 			? relatedTracks.filter(t => t._id !== track?._id).slice(0, 3)
 			: [];
 
-	const queueTracks = queue.map(item => ("track" in item ? item.track : item));
+	const priorityTracks = priorityQueue
+	const playlistTracks = playlistQueue.map(item => ("track" in item ? item.track : item));
 
 	const handlePlay = async (trackId: Id<"tracks">) => {
 		const trackIsSelected = track?._id === trackId;
@@ -314,10 +321,106 @@ export default function RightSidebar() {
 											})()}
 										</div>
 								)}
-								{queueTracks.length > 0 && (
+								{priorityTracks.length > 0 && (
 										<div>
-											<h3 className="text-sm font-semibold text-muted-foreground mb-2">Next</h3>
-											{queueTracks.map((queueTrack, index) => {
+											<h3 className="text-sm font-semibold text-muted-foreground mb-2">Next in queue</h3>
+											{priorityTracks.map((queueTrack, index) => {
+												const dropdownId = `queue-${index}-${queueTrack._id}`;
+												return (
+														<div
+																key={`${index}-${queueTrack._id}`}
+																className="flex items-center gap-3 px-2 py-2 hover:bg-muted/50 rounded-md group transition-colors -mx-2"
+														>
+															<div className="relative flex-shrink-0 cursor-pointer"
+																	 onClick={() => playTrackFromQueue(queueTrack._id)}>
+																<img src={queueTrack.coverUrl} alt={queueTrack.title}
+																		 className="size-10 rounded group-hover:brightness-75 transition-all"/>
+																<button
+																		className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden group-hover:block"
+																>
+																	<Play size={18} fill="white"/>
+																</button>
+															</div>
+															<div className="min-w-0 flex-1">
+																<div
+																		className="text-sm font-medium truncate ">
+																	{queueTrack.title}
+																</div>
+																<div className="text-xs text-muted-foreground truncate">{queueTrack.artist.name}</div>
+															</div>
+															<div className="flex items-center justify-center">
+																{playlists && (
+																		<DropdownMenu open={openDropdown === dropdownId}
+																									onOpenChange={(isOpen) => setOpenDropdown(isOpen ? dropdownId : null)}>
+																			<DropdownMenuTrigger asChild>
+																				<MoreHorizontal
+																						size={20}
+																						className="text-muted-foreground hover:text-foreground cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+																				/>
+																			</DropdownMenuTrigger>
+
+																			<DropdownMenuContent className="w-40 font-semibold">
+																				<DropdownMenuSub>
+																					<DropdownMenuSubTrigger>
+																						<div className="flex items-center gap-2">
+																							<CirclePlus size={15} className="text-neutral-400"/>
+																							<span className="text-neutral-300">Add to Playlist</span>
+																						</div>
+																					</DropdownMenuSubTrigger>
+																					<DropdownMenuSubContent className="p-0">
+																						<Command>
+																							<CommandInput
+																									placeholder="Filter Pla..."
+																									autoFocus={true}
+																									className="h-9"
+																							/>
+																							<CommandList>
+																								<CommandEmpty>No Playlist found</CommandEmpty>
+																								<CommandGroup>
+																									{playlists.map((playlist) => (
+																											<CommandItem
+																													key={playlist._id}
+																													value={playlist.name}
+																													onSelect={async (currentValue) => {
+																														const selectedPlaylist = playlists.find(p => p.name === currentValue)
+																														if (selectedPlaylist) {
+																															setOpenDropdown(null)
+																															await addTrack({
+																																playlistId: selectedPlaylist._id,
+																																trackId: queueTrack._id
+																															})
+																														}
+																													}}
+																											>
+																												<div className="flex items-center gap-2">
+																													<img src={playlist.playlistPicUrl} alt="" width={24}
+																															 height={24}
+																															 className="rounded"/>
+																													<span>{playlist.name}</span>
+																												</div>
+																											</CommandItem>
+																									))}
+																								</CommandGroup>
+																							</CommandList>
+																						</Command>
+																					</DropdownMenuSubContent>
+																				</DropdownMenuSub>
+																			</DropdownMenuContent>
+																		</DropdownMenu>
+																)}
+															</div>
+														</div>
+												);
+											})}
+										</div>
+								)
+								}
+								{playlistTracks.length > 0 && (
+										<div>
+											<h3 className="text-sm font-semibold text-muted-foreground mb-2">
+												{currentPlaylist ? `Next from: ${currentPlaylist.name}` : "Next from Playlist"}
+											</h3>
+											{playlistTracks.map((queueTrack, index) => {
 												const dropdownId = `queue-${index}-${queueTrack._id}`;
 												return (
 														<div

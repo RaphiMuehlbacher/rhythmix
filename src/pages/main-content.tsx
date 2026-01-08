@@ -4,12 +4,13 @@ import {api} from "../../convex/_generated/api";
 import {
 	ContextMenu,
 	ContextMenuContent,
+	ContextMenuItem,
 	ContextMenuSub,
 	ContextMenuSubContent,
 	ContextMenuSubTrigger,
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import {CirclePlus} from "lucide-react";
+import {CirclePlus, ListPlus} from "lucide-react";
 import {
 	Command,
 	CommandEmpty,
@@ -18,11 +19,13 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command.tsx";
+import {usePlayerStore} from "@/stores/player-store.ts";
 
 export default function MainContent() {
 	const tracks = useQuery(api.tracks.all);
 	const playlists = useQuery(api.playlists.getAllByUser);
 	const addTrack = useMutation(api.playlists.addTrack);
+	const addToQueue = usePlayerStore((state) => state.addToQueue);
 
 
 	if (!tracks || !playlists) {
@@ -42,6 +45,14 @@ export default function MainContent() {
 									</ContextMenuTrigger>
 
 									<ContextMenuContent className="w-52">
+										<ContextMenuItem
+												onClick={() => addToQueue(track._id)}
+										>
+											<div className="flex items-center gap-2">
+												<ListPlus size={15} className="text-neutral-400"/>
+												<span className="text-neutral-300">Add to Queue</span>
+											</div>
+										</ContextMenuItem>
 										<ContextMenuSub>
 											<ContextMenuSubTrigger>
 												<div className="flex items-center gap-2">

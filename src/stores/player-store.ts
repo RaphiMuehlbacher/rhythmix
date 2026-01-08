@@ -26,6 +26,10 @@ type PlayerStore = {
 		next: (PlaylistTrackFull | TrackFull)[],
 	},
 
+	// Separate queues for priority and playlist
+	priorityQueue: TrackFull[],
+	playlistQueue: (PlaylistTrackFull | TrackFull)[],
+
 	currentIndex: number,
 
 	progress: number,
@@ -41,6 +45,7 @@ type PlayerStore = {
 	playTrack: (id: Id<"tracks">) => Promise<void>,
 	playTrackFromQueue: (trackId: Id<"tracks">) => Promise<void>,
 	playPlaylist: (id: Id<"playlists">, startIndex?: number) => Promise<void>,
+	addToQueue: (id: Id<"tracks">) => Promise<void>,
 	nextTrack: () => Promise<void>,
 	previousTrack: () => Promise<void>,
 	pause: () => void,
@@ -68,6 +73,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 			current: null,
 			next: [],
 		},
+		priorityQueue: [],
+		playlistQueue: [],
+
 		currentIndex: 0,
 		progress: 0,
 		duration: 0,
@@ -137,9 +145,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 		},
 
 		playTrackFromQueue: async (trackId: Id<"tracks">) => {
-			const {window} = get();
+			const {window, priorityQueue, playlistQueue} = get();
 
-			const queueIndex = window.next.findIndex(item => {
+			// Combine both queues to search for the track
+			const combinedQueue = [...priorityQueue, ...playlistQueue];
+
+			const queueIndex = combinedQueue.findIndex(item => {
 				const track = "track" in item ? item.track : item;
 				return track._id === trackId;
 			});
@@ -149,9 +160,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 				return;
 			}
 
-			const selectedTrack = window.next[queueIndex];
-			const tracksBeforeSelected = window.next.slice(0, queueIndex);
-			const tracksAfterSelected = window.next.slice(queueIndex + 1);
+			const selectedTrack = combinedQueue[queueIndex];
+
+			// Determine if it's from priority queue or playlist queue
+			const isPriorityTrack = queueIndex < priorityQueue.length;
 
 			let audioUrl = "";
 			if ("audioUrl" in selectedTrack) {
@@ -173,14 +185,42 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 			if (window.current) {
 				newPrevious.push(window.current);
 			}
-			newPrevious.push(...tracksBeforeSelected);
+
+			// Update queues based on where the track was found
+			let newPriorityQueue: TrackFull[];
+			let newPlaylistQueue: (PlaylistTrackFull | TrackFull)[];
+
+			if (isPriorityTrack) {
+				// Track is in priority queue
+				// Add all tracks before the selected one to previous
+				for (let i = 0; i < queueIndex; i++) {
+					newPrevious.push(priorityQueue[i]);
+				}
+				// Remove everything up to and including the selected track from priority queue
+				newPriorityQueue = priorityQueue.slice(queueIndex + 1);
+				newPlaylistQueue = playlistQueue;
+			} else {
+				// Track is in playlist queue
+				const playlistIndex = queueIndex - priorityQueue.length;
+				// Add all priority queue tracks to previous
+				newPrevious.push(...priorityQueue);
+				// Add all playlist tracks before the selected one to previous
+				for (let i = 0; i < playlistIndex; i++) {
+					newPrevious.push(playlistQueue[i]);
+				}
+				// Clear priority queue and remove everything up to and including selected track from playlist queue
+				newPriorityQueue = [];
+				newPlaylistQueue = playlistQueue.slice(playlistIndex + 1);
+			}
 
 			set({
 				window: {
 					previous: newPrevious,
 					current: selectedTrack,
-					next: tracksAfterSelected,
+					next: [],
 				},
+				priorityQueue: newPriorityQueue,
+				playlistQueue: newPlaylistQueue,
 				currentIndex: newPrevious.length,
 				progress: 0,
 				duration: audio.duration * 1000,
@@ -206,8 +246,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 				window: {
 					previous: [],
 					current: chunk[0],
-					next: chunk.slice(1),
+					next: [],
 				},
+				priorityQueue: [],
+				playlistQueue: chunk.slice(1).map(pt => pt.track),
 				context: {
 					type: "playlist",
 					id: playlistId,
@@ -219,16 +261,27 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 		},
 
 		nextTrack: async () => {
-			const {window, currentIndex, context, convexClient} = get();
-			if (window.next.length > 0) {
+			const {window, currentIndex, context, convexClient, priorityQueue, playlistQueue} = get();
+
+			// Check priority queue first, then playlist queue
+			let nextTrack: TrackFull | PlaylistTrackFull | null = null;
+			let isPriorityTrack = false;
+
+			if (priorityQueue.length > 0) {
+				nextTrack = priorityQueue[0];
+				isPriorityTrack = true;
+			} else if (playlistQueue.length > 0) {
+				nextTrack = playlistQueue[0];
+			}
+
+			if (nextTrack) {
 				const current = window.current!;
-				const next = window.next[0];
 
 				let audioUrl = "";
-				if ("audioUrl" in next) {
-					audioUrl = next.audioUrl;
-				} else if ("track" in next) {
-					audioUrl = next.track.audioUrl;
+				if ("audioUrl" in nextTrack) {
+					audioUrl = nextTrack.audioUrl;
+				} else if ("track" in nextTrack) {
+					audioUrl = nextTrack.track.audioUrl;
 				}
 
 				if (!get().hls) {
@@ -240,31 +293,34 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 				get().hls?.loadSource(audioUrl);
 				await audio.play();
 
+				const newPriorityQueue = isPriorityTrack ? priorityQueue.slice(1) : priorityQueue;
+				const newPlaylistQueue = isPriorityTrack ? playlistQueue : playlistQueue.slice(1);
+
 				set({
 					window: {
 						previous: window.previous?.concat(current),
-						current: next,
-						next: window.next.slice(1),
+						current: nextTrack,
+						next: [],
 					},
+					priorityQueue: newPriorityQueue,
+					playlistQueue: newPlaylistQueue,
 					currentIndex: currentIndex + 1,
 					progress: 0,
 					duration: audio.duration * 1000,
 					isPlaying: true
 				});
 
-				if (window.next.length <= 3 && context.type === "playlist" && context.id && convexClient) {
+				// Load more playlist tracks if needed (check the NEW queue length)
+				if (newPlaylistQueue.length <= 3 && context.type === "playlist" && context.id && convexClient) {
 					const nextChunk = await convexClient.query(api.playlists.getPlaylistTracks, {
 						playlistId: context.id,
-						offset: currentIndex + window.next.length + 1,
+						offset: currentIndex + newPlaylistQueue.length + 1,
 						limit: 10
 					});
 
 					if (nextChunk.length > 0) {
 						set(state => ({
-							window: {
-								...state.window,
-								next: [...state.window.next, ...nextChunk.map(pt => pt.track)]
-							}
+							playlistQueue: [...state.playlistQueue, ...nextChunk.map(pt => pt.track)]
 						}));
 					}
 				}
@@ -274,10 +330,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 		},
 
 		previousTrack: async () => {
-			const {window, currentIndex} = get();
+			const {window, currentIndex, priorityQueue, playlistQueue} = get();
 			if (window.previous.length > 0) {
 				const current = window.current!;
-				const previous = window.previous[window.previous.length - 1]; // Take the last item, not the first
+				const previous = window.previous[window.previous.length - 1];
 
 				let audioUrl = "";
 				if ("audioUrl" in previous) {
@@ -295,12 +351,34 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 				get().hls?.loadSource(audioUrl);
 				await audio.play();
 
+				// Extract the actual track from current (it might be wrapped in PlaylistTrackFull)
+				const currentAsTrack = "track" in current ? current.track : current;
+
+				// Check if current track exists in priority queue - if so, don't add it again
+				const currentTrackId = currentAsTrack._id;
+				const isInPriorityQueue = priorityQueue.some(t => t._id === currentTrackId);
+				const isInPlaylistQueue = playlistQueue.some(t => {
+					const trackToCheck = "track" in t ? t.track : t;
+					return trackToCheck._id === currentTrackId;
+				});
+
+				// Only add back to queue if it's not already there
+				let newPriorityQueue = priorityQueue;
+				let newPlaylistQueue = playlistQueue;
+
+				if (!isInPriorityQueue && !isInPlaylistQueue) {
+					// Add to priority queue since it was manually played
+					newPriorityQueue = [currentAsTrack, ...priorityQueue];
+				}
+
 				set({
 					window: {
-						previous: window.previous.slice(0, -1), // Remove the last item
+						previous: window.previous.slice(0, -1),
 						current: previous,
-						next: [current, ...window.next], // Add current to the front of next
+						next: [],
 					},
+					priorityQueue: newPriorityQueue,
+					playlistQueue: newPlaylistQueue,
 					currentIndex: currentIndex - 1,
 					progress: 0,
 					duration: audio.duration * 1000,
@@ -325,6 +403,16 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 			} else {
 				set({isRightSidebarOpen: !currentState.isRightSidebarOpen});
 			}
+		},
+
+		addToQueue: async (id: Id<"tracks">) => {
+			const convex = get().convexClient;
+			const track = await convex?.query(api.tracks.get, {trackId: id});
+			if (!track) throw new Error("Something went wrong");
+
+			set(state => ({
+				priorityQueue: [...state.priorityQueue, track]
+			}));
 		},
 	}
 })

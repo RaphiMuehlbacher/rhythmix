@@ -9,7 +9,8 @@ export default function Sidebar() {
 	if (!playlists) return <h1>Loading...</h1>
 
 	return (
-			<div className="bg-background rounded-lg w-sm p-2 overflow-y-auto scrollbar scrollbar-track-transparent scrollbar-thumb-neutral-700">
+			<div
+					className="bg-background rounded-lg w-xs p-2 overflow-y-auto scrollbar scrollbar-track-transparent scrollbar-thumb-neutral-700">
 				<div className="flex flex-col">
 					<div className="relative flex justify-between items-center px-5 py-4">
 						<button className="text-foreground text-md font-bold">
