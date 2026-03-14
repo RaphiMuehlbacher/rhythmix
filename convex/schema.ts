@@ -7,29 +7,38 @@ export default defineSchema({
 	tracks: defineTable({
 		title: v.string(),
 		artistId: v.id("artists"),
-		duration: v.float64(),
+		duration: v.number(),
 		lyrics: v.string(),
 		coverUrl: v.string(),
 		audioUrl: v.string(),
 	}).index("by_artistId", ["artistId"])
-    .searchIndex("search_body", {
-    searchField: "title",
-  }),
+			.searchIndex("search_body", {
+				searchField: "title",
+			}),
 
 	artists: defineTable({
 		userId: v.id("users"),
-    name: v.string(),
-    description: v.string(),
-    profilePicUrl: v.string(),
-  }).index("by_userId", ["userId"])
-    .searchIndex("search_body", {
-      searchField: "name",
-    }),
+		name: v.string(),
+		description: v.string(),
+		profilePicUrl: v.string(),
+	}).index("by_userId", ["userId"])
+			.searchIndex("search_body", {
+				searchField: "name",
+			}),
 
 	playbackStates: defineTable({
 		userId: v.id("users"),
+		devicePlaying: v.id("devices"),
 		currentTrackId: v.id("tracks"),
+		positionAtUpdate: v.number(),
+		isPlaying: v.boolean(),
+		lastUpdate: v.number(),
 	}).index("by_userId", ["userId"]),
+
+	devices: defineTable({
+		userId: v.id("users"),
+		name: v.string(),
+	}),
 
 	playlists: defineTable({
 		name: v.string(),
